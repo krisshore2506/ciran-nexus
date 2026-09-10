@@ -1,0 +1,98 @@
+[
+  {
+    "id": "CDR-1023",
+    "type": "call_record",
+    "timestamp": "2026-01-10T21:14:00Z",
+    "source_system": "telecom",
+    "content": {
+      "caller": "XXXXX1234",
+      "receiver": "XXXXX5678",
+      "duration": 14,
+      "subscriber_name_a": "Ravi Kumar",
+      "subscriber_name_b": "Karthik Raj"
+    }
+  },
+  {
+    "id": "CDR-1188",
+    "type": "call_record",
+    "timestamp": "2026-01-25T14:30:00Z",
+    "source_system": "telecom",
+    "content": {
+      "caller": "XXXXX5678",
+      "receiver": "XXXXX9999",
+      "duration": 5,
+      "subscriber_name_a": "Arjun Kumar"
+    }
+  },
+  {
+    "id": "Vehicle-445",
+    "type": "vehicle_sighting",
+    "timestamp": "2026-01-20T08:02:00Z",
+    "source_system": "ANPR",
+    "content": {
+      "plate_number": "TN-XX-1234",
+      "location": "Location A",
+      "driver_observed": "Ravi Kumar"
+    }
+  },
+  {
+    "id": "FIN-3301",
+    "type": "financial_transaction",
+    "timestamp": "2026-01-18T13:20:00Z",
+    "source_system": "bank",
+    "content": {
+      "sender_account": "AC-XXXX-102",
+      "receiver_account": "AC-XXXX-204",
+      "amount": 50000,
+      "reference": "Ravi transfer"
+    }
+  },
+  {
+    "id": "Case-101",
+    "type": "case_report",
+    "timestamp": "2026-01-10T09:00:00Z",
+    "source_system": "CCTNS",
+    "content": {
+      "case_id": "CASE-101",
+      "status": "Active",
+      "type": "Property offence",
+      "text": "Report filed against Ravi Kumar and Karthik Raj for property damage near Location A."
+    }
+  },
+  {
+    "id": "Case-156",
+    "type": "case_report",
+    "timestamp": "2026-01-18T10:00:00Z",
+    "source_system": "ICJS",
+    "content": {
+      "case_id": "CASE-156",
+      "status": "Active",
+      "type": "Financial offence",
+      "text": "Investigation into AC-XXXX-204 linked to Mohan Das and Ravi Kumar."
+    }
+  },
+  {
+    "id": "Case-203",
+    "type": "case_report",
+    "timestamp": "2026-01-22T11:30:00Z",
+    "source_system": "CCTNS",
+    "content": {
+      "case_id": "CASE-203",
+      "status": "Active",
+      "type": "Organised activity",
+      "text": "Suspects named: Ravi Kumar, Arjun Kumar. Vehicle TN-XX-1234 seen at scene. Phone XXXXX1234 recovered."
+    }
+  },
+  {
+    "id": "Case-247",
+    "type": "case_report",
+    "timestamp": "2026-02-02T14:00:00Z",
+    "source_system": "CCTNS",
+    "content": {
+      "case_id": "CASE-247",
+      "status": "Under review",
+      "type": "Vehicle offence",
+      "text": "Vehicle TN-XX-5678 involved. Arjun Kumar and Priya Shah present at Location C."
+    }
+  }
+]

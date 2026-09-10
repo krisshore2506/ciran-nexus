@@ -1,0 +1,128 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * CIRAN design system — dark intelligence command center.
+ * All colors are oklch semantic tokens. Never hardcode colors in components.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-critical: var(--critical);
+  --color-high: var(--high);
+  --color-medium: var(--medium);
+  --color-info: var(--info);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-node-person: var(--node-person);
+  --color-node-phone: var(--node-phone);
+  --color-node-vehicle: var(--node-vehicle);
+  --color-node-account: var(--node-account);
+  --color-node-location: var(--node-location);
+  --color-node-case: var(--node-case);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: oklch(0.14 0.015 250);
+  --foreground: oklch(0.95 0.005 250);
+  --surface: oklch(0.18 0.016 250);
+  --surface-2: oklch(0.22 0.018 250);
+  --card: oklch(0.18 0.016 250);
+  --card-foreground: oklch(0.95 0.005 250);
+  --popover: oklch(0.2 0.017 250);
+  --popover-foreground: oklch(0.95 0.005 250);
+  --primary: oklch(0.7 0.13 215);
+  --primary-foreground: oklch(0.16 0.02 250);
+  --secondary: oklch(0.27 0.018 250);
+  --secondary-foreground: oklch(0.93 0.005 250);
+  --muted: oklch(0.26 0.016 250);
+  --muted-foreground: oklch(0.68 0.015 250);
+  --accent: oklch(0.3 0.03 220);
+  --accent-foreground: oklch(0.95 0.005 250);
+  --destructive: oklch(0.6 0.19 22);
+  --destructive-foreground: oklch(0.97 0.01 250);
+  --critical: oklch(0.62 0.2 22);
+  --high: oklch(0.72 0.15 60);
+  --medium: oklch(0.8 0.13 95);
+  --info: oklch(0.7 0.11 220);
+  --success: oklch(0.7 0.13 160);
+  --border: oklch(0.24 0.016 250);
+  --border-strong: oklch(0.3 0.02 250);
+  --input: oklch(0.22 0.016 250);
+  --ring: oklch(0.6 0.1 215);
+  --node-person: oklch(0.72 0.13 220);
+  --node-phone: oklch(0.74 0.13 160);
+  --node-vehicle: oklch(0.78 0.13 90);
+  --node-account: oklch(0.7 0.14 300);
+  --node-location: oklch(0.74 0.14 40);
+  --node-case: oklch(0.68 0.16 12);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@utility panel {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+@utility grid-backdrop {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 3%) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 3%) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
