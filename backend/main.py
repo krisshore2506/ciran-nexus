@@ -1,11 +1,24 @@
+import contextlib
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import entities, network, cases, alerts, patterns, cross_case, evidence, copilot, reports, ingestion
+from api.routes import entities, network, cases, alerts, patterns, cross_case, evidence, copilot, reports, ingestion, kpis, timeline
+
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI):
+    # auto-load mock data on startup
+    from api.routes.ingestion import load_data
+    try:
+        load_data()
+        print("Mock data loaded successfully on startup.")
+    except Exception as e:
+        print(f"Error loading initial mock data: {e}")
+    yield
 
 app = FastAPI(
     title="CIRAN Intelligence API",
     description="Phase 1 Backend for Criminal Intelligence & Relationship Analysis Network",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Enable CORS for frontend integration
@@ -28,6 +41,8 @@ app.include_router(evidence.router, prefix="/api/evidence", tags=["Evidence"])
 app.include_router(copilot.router, prefix="/api/copilot", tags=["Copilot"])
 app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
 app.include_router(ingestion.router, prefix="/api/ingestion", tags=["Ingestion"])
+app.include_router(kpis.router, prefix="/api/kpis", tags=["KPIs"])
+app.include_router(timeline.router, prefix="/api/timeline", tags=["Timeline"])
 
 @app.get("/health")
 def health_check():

@@ -94,6 +94,26 @@ def verify():
         print(json.dumps(report, indent=2))
         results['report'] = report
         
+        # 12. Verify GET /api/kpis
+        print("\n--- GET /api/kpis ---")
+        res = httpx.get(f"{BASE_URL}/api/kpis")
+        res.raise_for_status()
+        kpis = res.json()
+        print(f"Total KPIs: {len(kpis)}")
+        if kpis:
+            print(json.dumps(kpis[0], indent=2))
+        results['kpis'] = kpis
+        
+        # 13. Verify GET /api/timeline
+        print("\n--- GET /api/timeline ---")
+        res = httpx.get(f"{BASE_URL}/api/timeline")
+        res.raise_for_status()
+        timeline = res.json()
+        print(f"Total timeline events: {len(timeline)}")
+        if timeline:
+            print(json.dumps(timeline[0], indent=2))
+        results['timeline'] = timeline
+        
         print("\nVERIFICATION COMPLETE")
     except Exception as e:
         print(f"\nERROR DURING VERIFICATION: {e}")
