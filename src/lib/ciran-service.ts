@@ -2,6 +2,9 @@ import type { Entity, EntityType, Relation, RelationType } from "./ciran-data";
 
 export interface CopilotResponse {
   summary: string;
+  facts?: string[];
+  derived_findings?: string[];
+  limitations?: string[];
   chips: string[];
   path?: string[];
   timeline?: { day: string; title: string }[];
@@ -109,11 +112,11 @@ export async function getEvidence(id?: string) {
   return fetchApi<any>(`/api/evidence/${encodeURIComponent(id)}`);
 }
 
-export async function askCopilot(query: string, contextId?: string): Promise<CopilotResponse> {
+export async function askCopilot(query: string, contextId?: string, history?: {role: string, content: string}[]): Promise<CopilotResponse> {
   return fetchApi<CopilotResponse>("/api/copilot/query", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, contextId }),
+    body: JSON.stringify({ query, contextId, conversation_history: history }),
   });
 }
 

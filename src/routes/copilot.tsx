@@ -33,17 +33,22 @@ function CopilotPage() {
     setIsLoading(true);
 
     try {
+      const history = messages.map(m => ({
+        role: m.role === "copilot" ? "assistant" : "user",
+        content: m.role === "copilot" ? (m.content.summary || "") : m.content
+      }));
+
       const res = await fetch("/api/copilot/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: userQuery }),
+        body: JSON.stringify({ query: userQuery, conversation_history: history }),
       });
       const data = await res.json();
       setMessages((prev) => [...prev, { role: "copilot", content: data }]);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "copilot", content: { summary: "System error. Intelligence engine offline." } },
+        { role: "copilot", content: { summary: "I couldn't process that query. Please try again.", chips: [] } },
       ]);
     } finally {
       setIsLoading(false);
@@ -95,12 +100,57 @@ function CopilotPage() {
                     <p className="text-sm">{m.content}</p>
                   ) : (
                     <div className="space-y-4">
-                      <p className="text-sm text-foreground leading-relaxed">{m.content.summary}</p>
+                      {m.content.summary && (
+                        <p className="text-sm text-foreground leading-relaxed">{m.content.summary}</p>
+                      )}
 
-                      {m.content.caution && (
-                        <div className="flex items-start gap-2 bg-background p-2.5 rounded border border-border-strong">
-                          <AlertTriangle className="size-4 text-high shrink-0 mt-0.5" />
-                          <p className="text-xs text-muted-foreground">{m.content.caution}</p>
+                      {m.content.facts && m.content.facts.length > 0 && (
+                        <div className="bg-surface-2 p-3 rounded border border-border/50">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                            Facts
+                          </p>
+                          <ul className="list-disc list-outside ml-4 space-y-1">
+                            {m.content.facts.map((fact: string, j: number) => (
+                              <li key={j} className="text-xs text-foreground">
+                                {fact}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {m.content.derived_findings && m.content.derived_findings.length > 0 && (
+                        <div className="bg-primary/5 p-3 rounded border border-primary/20">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-primary mb-2 flex items-center gap-1">
+                            <Sparkles className="size-3" /> Derived Findings
+                          </p>
+                          <ul className="list-disc list-outside ml-4 space-y-1">
+                            {m.content.derived_findings.map((finding: string, j: number) => (
+                              <li key={j} className="text-xs text-foreground">
+                                {finding}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {(m.content.caution || (m.content.limitations && m.content.limitations.length > 0)) && (
+                        <div className="flex flex-col gap-2 bg-background p-3 rounded border border-border-strong">
+                          {m.content.caution && (
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className="size-4 text-high shrink-0 mt-0.5" />
+                              <p className="text-xs text-muted-foreground">{m.content.caution}</p>
+                            </div>
+                          )}
+                          {m.content.limitations && m.content.limitations.length > 0 && (
+                            <ul className="list-disc list-outside ml-6 space-y-1">
+                              {m.content.limitations.map((lim: string, j: number) => (
+                                <li key={j} className="text-xs text-muted-foreground">
+                                  {lim}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
                       )}
 

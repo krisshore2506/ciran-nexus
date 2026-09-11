@@ -101,14 +101,32 @@ class CopilotTimelineItem(BaseModel):
     day: str
     title: str
 
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+class StructuredQuery(BaseModel):
+    intent: str
+    entities: List[str]
+    action: Optional[str] = None
+    time_range: Optional[str] = None
+    ambiguous: bool = False
+    confidence: float = 0.0
+
 class CopilotResponse(BaseModel):
     summary: str
+    facts: Optional[List[str]] = None
+    derived_findings: Optional[List[str]] = None
+    limitations: Optional[List[str]] = None
     chips: List[str]
     path: Optional[List[str]] = None
     timeline: Optional[List[CopilotTimelineItem]] = None
     evidence: Optional[List[str]] = None
     confidence: int
     caution: Optional[str] = None
+    intent: Optional[str] = None
+    referenced_entities: Optional[List[str]] = None
+    source_count: Optional[int] = None
 
 class RawRecord(BaseModel):
     id: str
@@ -116,3 +134,13 @@ class RawRecord(BaseModel):
     timestamp: str
     content: dict
     source_system: str
+
+class RetrievalResult(BaseModel):
+    entities: List[Entity] = Field(default_factory=list)
+    relationships: List[Relation] = Field(default_factory=list)
+    cases: List[str] = Field(default_factory=list)
+    events: List[TimelineEvent] = Field(default_factory=list)
+    patterns: List[PatternInsight] = Field(default_factory=list)
+    evidence: List[str] = Field(default_factory=list)
+    paths: List[str] = Field(default_factory=list)
+    retrieval_notes: List[str] = Field(default_factory=list)
