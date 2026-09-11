@@ -71,6 +71,7 @@ def _run_post_ingestion_pipeline(records_processed: int, raw_records: list):
 
     # Phase 3: Temporal and Graph Insights
     temp_insights = state.temporal_analysis.generate_insights(state.entities)
+    state.timeline = state.temporal_analysis.generate_timeline_events(raw_records)
     graph_insights = state.graph_intelligence.generate_insights(state.entities)
     state.patterns.extend(temp_insights)
     state.patterns.extend(graph_insights)

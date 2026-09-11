@@ -43,3 +43,102 @@ class TemporalAnalysisService:
                         ))
                     
         return insights
+
+    def generate_timeline_events(self, raw_records: list) -> List[TimelineEvent]:
+        events = []
+        relations = self.relationship_engine.get_relations()
+        
+        record_to_entities = {}
+        for r in relations:
+            if r.sourceRecord and r.sourceRecord != "RESOLUTION_ENGINE":
+                if r.sourceRecord not in record_to_entities:
+                    record_to_entities[r.sourceRecord] = set()
+                record_to_entities[r.sourceRecord].add(r.source)
+                record_to_entities[r.sourceRecord].add(r.target)
+                
+        seen_ids = set()
+                
+        for rec in raw_records:
+            record_id = rec.get("record_id")
+            record_type = rec.get("record_type")
+            ts = rec.get("timestamp")
+            
+            if not record_id or not record_type or not ts:
+                continue
+                
+            event_id = f"TL-{record_id}"
+            if event_id in seen_ids:
+                continue
+            seen_ids.add(event_id)
+                
+            try:
+                dt = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                date_str = dt.strftime("%Y-%m-%d %H:%M")
+                day_str = dt.strftime("%b %d, %Y")
+            except:
+                date_str = ts
+                day_str = ts
+
+            category = "communication"
+            title = "Activity"
+            detail = ""
+            
+            if record_type == "call_record":
+                category = "communication"
+                title = "Communication Event"
+            elif record_type == "vehicle_sighting":
+                category = "vehicle"
+                title = "Vehicle Sighting"
+            elif record_type == "financial_transaction":
+                category = "financial"
+                title = "Financial Transaction"
+            elif record_type == "case_report":
+                category = "case"
+                title = "Case Report"
+                
+            struct_data = rec.get("structured_data", {})
+            text_content = rec.get("text_content", "")
+            
+            if record_type == "call_record":
+                caller = struct_data.get("caller", "")
+                receiver = struct_data.get("receiver", "")
+                if caller and receiver:
+                    detail = f"Call from {caller} to {receiver}."
+                else:
+                    detail = text_content
+            elif record_type == "vehicle_sighting":
+                plate = struct_data.get("plate", "")
+                loc = struct_data.get("location", "")
+                if plate and loc:
+                    detail = f"Vehicle {plate} observed at {loc}."
+                else:
+                    detail = text_content
+            elif record_type == "financial_transaction":
+                sender = struct_data.get("sender", "")
+                receiver = struct_data.get("receiver", "")
+                amount = struct_data.get("amount", "")
+                if sender and receiver:
+                    detail = f"Transfer of {amount} from {sender} to {receiver}."
+                else:
+                    detail = text_content
+            elif record_type == "case_report":
+                detail = text_content
+                
+            if not detail:
+                detail = f"Record of type {record_type} logged at {day_str}."
+                
+            event_entities = list(record_to_entities.get(record_id, set()))
+            
+            events.append(TimelineEvent(
+                id=event_id,
+                date=date_str,
+                day=day_str,
+                category=category,
+                title=title,
+                detail=detail,
+                entities=event_entities,
+                record=record_id
+            ))
+            
+        events.sort(key=lambda x: x.date, reverse=True)
+        return events
