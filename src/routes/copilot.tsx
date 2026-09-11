@@ -139,7 +139,7 @@ function CopilotPage() {
                           {m.content.caution && (
                             <div className="flex items-start gap-2">
                               <AlertTriangle className="size-4 text-high shrink-0 mt-0.5" />
-                              <p className="text-xs text-muted-foreground">{m.content.caution}</p>
+                              <p className="text-xs text-muted-foreground">Automated analysis based on CIRAN intelligence records. Verify all source records.</p>
                             </div>
                           )}
                           {m.content.limitations && m.content.limitations.length > 0 && (
