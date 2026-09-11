@@ -6,6 +6,7 @@ class CopilotRetrievalService:
     def __init__(self):
         self.max_depth = 3
         self.max_nodes = 50
+        self.max_paths = 2
 
     def retrieve(self, query: StructuredQuery, state: Any, extracted_entities: List[Entity]) -> RetrievalResult:
         result = RetrievalResult()

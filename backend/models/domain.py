@@ -103,7 +103,7 @@ class CopilotTimelineItem(BaseModel):
 
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
-    content: str
+    content: str = Field(..., max_length=2000)
 
 class StructuredQuery(BaseModel):
     intent: str
