@@ -1,7 +1,7 @@
 import contextlib
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import entities, network, cases, alerts, patterns, cross_case, evidence, copilot, reports, ingestion, kpis, timeline
+from api.routes import entities, network, cases, alerts, patterns, cross_case, evidence, copilot, reports, ingestion, kpis, timeline, upload
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,8 +16,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="CIRAN Intelligence API",
-    description="Phase 1 Backend for Criminal Intelligence & Relationship Analysis Network",
-    version="1.0.0",
+    description="Phase 2 Backend for Criminal Intelligence & Relationship Analysis Network",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -43,6 +43,7 @@ app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
 app.include_router(ingestion.router, prefix="/api/ingestion", tags=["Ingestion"])
 app.include_router(kpis.router, prefix="/api/kpis", tags=["KPIs"])
 app.include_router(timeline.router, prefix="/api/timeline", tags=["Timeline"])
+app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
 
 @app.get("/health")
 def health_check():
