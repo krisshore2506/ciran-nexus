@@ -44,6 +44,7 @@ class TimelineEvent(BaseModel):
     detail: str
     entities: List[str]
     record: str
+    crimeType: Optional[str] = None
 
 class Alert(BaseModel):
     id: str
