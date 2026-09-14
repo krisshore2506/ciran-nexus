@@ -29,7 +29,7 @@ class CIRANGraphService:
         self.supervisor = SupervisorAgent()
         self.evidence_agent = EvidenceAgent(self.vector_search)
         self.network_agent = NetworkAgent(self.neo4j_graph)
-        self.correlation_agent = CorrelationAgent()
+        self.correlation_agent = CorrelationAgent(self.neo4j_graph)
         self.risk_agent = RiskAgent()
         self.validator = EvidenceValidator()
 
