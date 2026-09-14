@@ -4,10 +4,12 @@ import uuid
 from typing import Dict, Any, List
 
 from sqlalchemy.orm import Session
-from models.sql_models import RawRecord, Entity as SQLEntity
+from models.sql_models import RawRecord, Entity as SQLEntity, DocumentChunk
 from services.document_parser import DocumentParser
 from services.nlp_extractor import NLPExtractor
 from services.identity_resolver import IdentityResolver
+from services.chunking_service import ChunkingService
+from services.embedding_service import EmbeddingService
 
 class IngestionService:
     def __init__(self, db: Session, neo4j_session):
@@ -15,10 +17,12 @@ class IngestionService:
         self.neo4j_session = neo4j_session
         self.extractor = NLPExtractor()
         self.resolver = IdentityResolver()
+        self.chunker = ChunkingService(chunk_size=500, overlap=50)
+        self.embedder = EmbeddingService()
 
     def process_document(self, filename: str, content: bytes, mime_type: str) -> Dict[str, Any]:
         """
-        Main orchestration flow for Phase 2 data ingestion.
+        Main orchestration flow for Phase 2 data ingestion with Phase 4 Chunking/Embedding.
         """
         record_id = f"DOC-{uuid.uuid4().hex[:8].upper()}"
         timestamp = datetime.now(timezone.utc).isoformat()
@@ -55,7 +59,6 @@ class IngestionService:
             
             # 4. Entity Resolution & Postgres Persistence
             resolved_entities: Dict[str, SQLEntity] = {}
-            # We map local temporary values to resolved IDs to build relationships correctly
             val_to_id_map: Dict[str, str] = {}
             
             for ent in raw_entities:
@@ -63,11 +66,9 @@ class IngestionService:
                 ent_type = ent.get("type", "unknown")
                 confidence = ent.get("confidence", 50)
                 
-                # Resolve
                 resolved_id = self.resolver.resolve_entity(label, ent_type, self.db)
                 val_to_id_map[label] = resolved_id
                 
-                # Upsert to Postgres
                 if resolved_id not in resolved_entities:
                     existing = self.db.query(SQLEntity).filter(SQLEntity.id == resolved_id).first()
                     if not existing:
@@ -83,16 +84,14 @@ class IngestionService:
                         self.db.add(new_ent)
                         resolved_entities[resolved_id] = new_ent
             
-            self.db.commit() # Commit Postgres entities first so Neo4j has matching IDs
+            self.db.commit() 
             
             # 5. Neo4j Persistence
-            # Insert Nodes
             for resolved_id, ent in resolved_entities.items():
                 label_cap = ent.type.capitalize()
                 query = f"MERGE (n:{label_cap} {{id: $id}}) SET n.label = $label"
                 self.neo4j_session.run(query, id=resolved_id, label=ent.label)
                 
-            # Insert Relationships
             inserted_rels = 0
             for rel in raw_relationships:
                 source_val = rel.get("source")
@@ -122,15 +121,37 @@ class IngestionService:
                     )
                     inserted_rels += 1
 
-            # 6. Mark SUCCESS
-            raw_record.content["status"] = "SUCCESS"
-            self.db.commit()
+            # 6. Chunking and Embedding
+            chunks = self.chunker.chunk_text(text_content)
+            embeddings = self.embedder.embed_texts(chunks)
+            chunks_saved = 0
             
+            if embeddings and len(embeddings) == len(chunks):
+                for idx, (chunk_text, embedding) in enumerate(zip(chunks, embeddings)):
+                    chunk_id = f"{record_id}-C{idx}"
+                    doc_chunk = DocumentChunk(
+                        id=chunk_id,
+                        record_id=record_id,
+                        chunk_index=idx,
+                        text_content=chunk_text,
+                        embedding=embedding,
+                        timestamp=timestamp
+                    )
+                    self.db.add(doc_chunk)
+                self.db.commit()
+                chunks_saved = len(chunks)
+                raw_record.content["status"] = "SUCCESS"
+            else:
+                logging.warning(f"Embedding failed for {record_id}, saving chunks without embeddings or marking degraded.")
+                raw_record.content["status"] = "SUCCESS_NO_VECTOR"
+                self.db.commit()
+
             return {
                 "status": "success",
                 "record_id": record_id,
                 "entities_extracted": len(resolved_entities),
-                "relationships_extracted": inserted_rels
+                "relationships_extracted": inserted_rels,
+                "chunks_saved": chunks_saved
             }
             
         except Exception as e:

@@ -10,3 +10,4 @@ psycopg2-binary>=2.9.9
 neo4j>=5.10.0
 python-multipart>=0.0.6
 PyPDF2>=3.0.0
+pgvector>=0.2.1

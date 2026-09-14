@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Integer, DateTime, JSON, ARRAY
+from sqlalchemy import Column, String, Integer, DateTime, JSON, ARRAY, ForeignKey
+from pgvector.sqlalchemy import Vector
 from config.db import Base
 from datetime import datetime
 
@@ -73,3 +74,13 @@ class PatternInsight(Base):
     confidence = Column(Integer, nullable=False)
     why = Column(String, nullable=False)
     evidence = Column(ARRAY(String), nullable=False)
+
+class DocumentChunk(Base):
+    __tablename__ = "document_chunks"
+
+    id = Column(String, primary_key=True, index=True)
+    record_id = Column(String, ForeignKey("raw_records.id"), nullable=False, index=True)
+    chunk_index = Column(Integer, nullable=False)
+    text_content = Column(String, nullable=False)
+    embedding = Column(Vector(1536), nullable=True)
+    timestamp = Column(String, nullable=False)

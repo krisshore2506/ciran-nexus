@@ -12,10 +12,8 @@ class LLMService:
         self.retrieval_service = CopilotRetrievalService()
         self.ai_provider = OpenAIProvider()
         
-    def generate_copilot_response(self, query: str, state: Any, parser: QueryParser, history: Optional[List[ChatMessage]] = None) -> CopilotResponse:
-        structured_query = parser.parse_query(query, state.entities, history)
+    def generate_copilot_response_with_result(self, query: str, structured_query: StructuredQuery, extracted_entities: List[Entity], retrieval_result: RetrievalResult) -> CopilotResponse:
         intent = structured_query.intent
-        extracted_entities = [e for e in state.entities if e.id in structured_query.entities]
         base_confidence = int(structured_query.confidence * 100)
         
         if structured_query.ambiguous:
@@ -28,8 +26,6 @@ class LLMService:
                 intent=intent
             )
             
-        retrieval_result = self.retrieval_service.retrieve(structured_query, state, extracted_entities)
-        
         if self.provider in ["openai", "vertex"] or settings.LLM_API_KEY:
             ai_response = self._generate_ai_response(query, intent, extracted_entities, retrieval_result)
             if ai_response:
