@@ -84,7 +84,7 @@ function DashboardPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <QueryLoader isLoading={kpisQuery.isLoading} error={kpisQuery.error} data={kpisQuery.data}>
+        <QueryLoader isLoading={kpisQuery.isLoading} error={kpisQuery.error} data={kpisQuery.data} emptyMessage="No intelligence data available.">
           {(kpis) => (
             <>
               {kpis.map((k) => (
@@ -120,6 +120,7 @@ function DashboardPage() {
             isLoading={alertsQuery.isLoading}
             error={alertsQuery.error}
             data={alertsQuery.data?.slice(0, 4)}
+            emptyMessage="No intelligence data available."
           >
             {(alerts) => (
               <>
@@ -166,6 +167,7 @@ function DashboardPage() {
             error={networkQuery.error}
             data={networkQuery.data}
             isEmpty={(data) => data.nodes.length === 0}
+            emptyMessage="No intelligence data available."
           >
             {({ nodes, edges }) => (
               <NetworkGraph nodes={nodes} edges={edges} height={380} compact />
@@ -180,6 +182,7 @@ function DashboardPage() {
             isLoading={activityQuery.isLoading}
             error={activityQuery.error}
             data={activityQuery.data}
+            emptyMessage="No intelligence data available."
           >
             {(activity) => (
               <table className="w-full text-sm">
@@ -217,6 +220,7 @@ function DashboardPage() {
             isLoading={trendQuery.isLoading}
             error={trendQuery.error}
             data={trendQuery.data}
+            emptyMessage="No intelligence data available."
           >
             {(trend) => (
               <div className="h-[240px] w-full">

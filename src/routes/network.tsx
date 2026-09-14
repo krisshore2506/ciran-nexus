@@ -118,6 +118,7 @@ function NetworkPage() {
               error={networkQuery.error}
               data={networkQuery.data}
               isEmpty={(d) => d.nodes.length === 0}
+              emptyMessage="No intelligence data available."
             >
               {({ nodes, edges }) => (
                 <NetworkGraph
@@ -141,6 +142,7 @@ function NetworkPage() {
               isLoading={entityQuery.isLoading || neighboursQuery.isLoading}
               error={entityQuery.error || neighboursQuery.error}
               data={entityQuery.data}
+              emptyMessage="No intelligence data available."
             >
               {(entity) => (
                 <>
@@ -164,52 +166,7 @@ function NetworkPage() {
                   </header>
 
                   <div className="space-y-4 p-4">
-                    {selected === "P-RAVI" && (
-                      <div className="space-y-4 rounded-md border border-border bg-surface/50 p-4">
-                        <div>
-                          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase mb-1">
-                            Detected Pattern
-                          </p>
-                          <p className="text-sm font-medium text-foreground">
-                            Indirect association detected between Ravi Kumar and Arjun Kumar.
-                          </p>
-                        </div>
 
-                        <div>
-                          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase mb-2">
-                            Relationship Path
-                          </p>
-                          <PathTrail
-                            steps={[
-                              "Ravi Kumar",
-                              "Karthik Raj",
-                              "Vehicle TN-XX-1234",
-                              "Arjun Kumar",
-                            ]}
-                            dense
-                          />
-                        </div>
-
-                        <div>
-                          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase mb-2">
-                            Supporting Evidence
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border border-border bg-surface-2 text-muted-foreground">
-                              CDR-2026-08
-                            </span>
-                            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border border-border bg-surface-2 text-muted-foreground">
-                              V-TN-XX-1234
-                            </span>
-                            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border border-border bg-surface-2 text-muted-foreground">
-                              CASE-203
-                            </span>
-                          </div>
-                        </div>
-
-                        <Confidence value={84} />
-                      </div>
-                    )}
 
                     <div>
                       <p className="mb-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">

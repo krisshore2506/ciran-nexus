@@ -102,6 +102,7 @@ function WorkspacePage() {
               isLoading={resultsQuery.isLoading}
               error={resultsQuery.error}
               data={resultsQuery.data}
+              emptyMessage="No intelligence data available."
             >
               {(results) => (
                 <ul className="divide-y divide-border">
@@ -222,6 +223,7 @@ function WorkspacePage() {
                     isLoading={networkQuery.isLoading || neighboursQuery.isLoading}
                     error={networkQuery.error || neighboursQuery.error}
                     data={networkQuery.data}
+                    emptyMessage="No intelligence data available."
                   >
                     {({ nodes, edges }) => (
                       <>
@@ -255,6 +257,7 @@ function WorkspacePage() {
                     isLoading={timelineQuery.isLoading}
                     error={timelineQuery.error}
                     data={timelineQuery.data?.filter((e: any) => e.entities.includes(selectedId))}
+                    emptyMessage="No intelligence data available."
                   >
                     {(events) => (
                       <ul className="divide-y divide-border">
@@ -303,6 +306,7 @@ function WorkspacePage() {
                     isLoading={evidenceQuery.isLoading}
                     error={evidenceQuery.error}
                     data={evidenceQuery.data}
+                    emptyMessage="No intelligence data available."
                   >
                     {(evidence) => (
                       <ul className="divide-y divide-border">
@@ -325,24 +329,12 @@ function WorkspacePage() {
 
               {tab === "AI Insights" && (
                 <Panel title="Explainable AI">
-                  <AiInsight
-                    title={`Potential relationship detected between ${entityQuery.data.label} and Case 203.`}
-                    what="An indirect association links this entity to Case 203 through a shared intermediary contact and a shared vehicle record."
-                    why={[
-                      "Shared intermediary contact (Karthik Raj)",
-                      "Overlapping location presence at Location A",
-                      "Related vehicle record TN-XX-1234",
-                      "Temporal proximity to case registration",
-                    ]}
-                    evidence={["CDR-1023", "Vehicle-445", "Case-203"]}
-                    confidence={84}
-                    review="Verify the vehicle ownership chain in the source system and confirm the intermediary contact record before acting on this signal."
-                    actions={[
-                      { label: "View Source Records", primary: true },
-                      { label: "Open Network" },
-                      { label: "Add to Investigation" },
-                    ]}
-                  />
+                  <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed border-border rounded-md">
+                    <p className="mb-4">Real-time explainable AI insights require active Agent analysis.</p>
+                    <Link to="/copilot">
+                      <ActionButton variant="primary">Ask CIRAN Copilot for AI Analysis</ActionButton>
+                    </Link>
+                  </div>
                 </Panel>
               )}
 

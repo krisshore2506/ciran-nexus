@@ -1,4 +1,18 @@
-import type { Entity, EntityType, Relation, RelationType } from "./ciran-data";
+import {
+  entities as mockEntities,
+  relations as mockRelations,
+  timeline as mockTimeline,
+  alerts as mockAlerts,
+  patterns as mockPatterns,
+  crossCaseLinks as mockCrossCaseLinks,
+  evidence as mockEvidence,
+  type Entity,
+  type EntityType,
+  type Relation,
+  type RelationType,
+} from "./ciran-data";
+
+export type { Entity, EntityType, Relation, RelationType };
 
 export interface CopilotResponse {
   summary: string;
@@ -11,11 +25,18 @@ export interface CopilotResponse {
   evidence: string[];
   confidence: number;
   caution?: string;
+  intent?: string;
 }
+
+// Configurable Mock Data flag
+// Default: false in production/testing unless explicitly overridden
+const USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA === "true";
 
 // Helper to fetch from backend
 async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(path, options);
+  // If API Base URL is configured, prepend it. Otherwise assume same origin proxy.
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  const response = await fetch(`${baseUrl}${path}`, options);
   if (!response.ok) {
     throw new Error(`API Error: ${response.status} - ${await response.text()}`);
   }
@@ -23,11 +44,21 @@ async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export async function getEntities(query?: string): Promise<Entity[]> {
+  if (USE_MOCK) {
+    if (query) {
+      const q = query.toLowerCase();
+      return mockEntities.filter((e) => e.label.toLowerCase().includes(q) || e.id.toLowerCase().includes(q));
+    }
+    return mockEntities;
+  }
   const url = query ? `/api/entities?q=${encodeURIComponent(query)}` : "/api/entities";
   return fetchApi<Entity[]>(url);
 }
 
 export async function getEntity(id: string): Promise<Entity | undefined> {
+  if (USE_MOCK) {
+    return mockEntities.find((e) => e.id === id);
+  }
   try {
     return await fetchApi<Entity>(`/api/entities/${encodeURIComponent(id)}`);
   } catch (err) {
@@ -40,6 +71,9 @@ export async function searchEntities(query: string): Promise<Entity[]> {
 }
 
 export async function getCases(): Promise<Entity[]> {
+  if (USE_MOCK) {
+    return mockEntities.filter(e => e.type === "case");
+  }
   return fetchApi<Entity[]>("/api/cases");
 }
 
@@ -47,11 +81,13 @@ export async function getNetwork(filters?: {
   entityTypes?: EntityType[];
   relationTypes?: RelationType[];
 }): Promise<{ nodes: Entity[]; edges: Relation[] }> {
-  // If specific node networks are needed, it would be /api/entities/:id/network.
-  // The global network route might be heavy. For now, we query the root /api/network if needed,
-  // but ideally we only use the entity-specific one in UI.
-  // If we really need global:
-  const data = await fetchApi<{ nodes: Entity[]; edges: Relation[] }>("/api/network");
+  let data: { nodes: Entity[]; edges: Relation[] };
+  
+  if (USE_MOCK) {
+    data = { nodes: mockEntities, edges: mockRelations };
+  } else {
+    data = await fetchApi<{ nodes: Entity[]; edges: Relation[] }>("/api/network");
+  }
 
   const et = filters?.entityTypes;
   const rt = filters?.relationTypes;
@@ -71,6 +107,17 @@ export async function getNetwork(filters?: {
 export async function getEntityNetwork(
   id: string,
 ): Promise<{ nodes: Entity[]; edges: Relation[] }> {
+  if (USE_MOCK) {
+    const edges = mockRelations.filter((r) => r.source === id || r.target === id);
+    const relatedIds = new Set<string>();
+    edges.forEach((e) => {
+      relatedIds.add(e.source);
+      relatedIds.add(e.target);
+    });
+    relatedIds.add(id);
+    const nodes = mockEntities.filter((n) => relatedIds.has(n.id));
+    return { nodes, edges };
+  }
   return fetchApi<{ nodes: Entity[]; edges: Relation[] }>(
     `/api/entities/${encodeURIComponent(id)}/network`,
   );
@@ -89,6 +136,12 @@ export async function getNeighbours(id: string): Promise<{ relation: Relation; o
 }
 
 export async function getTimeline(id?: string) {
+  if (USE_MOCK) {
+    if (id) {
+      return mockTimeline.filter(t => t.entities.includes(id));
+    }
+    return mockTimeline;
+  }
   if (id) {
     return fetchApi<any[]>(`/api/entities/${encodeURIComponent(id)}/timeline`);
   }
@@ -96,23 +149,39 @@ export async function getTimeline(id?: string) {
 }
 
 export async function getCrossCaseLinks() {
+  if (USE_MOCK) return mockCrossCaseLinks;
   return fetchApi<any[]>("/api/cross-case");
 }
 
 export async function getIntelligenceAlerts() {
+  if (USE_MOCK) return mockAlerts;
   return fetchApi<any[]>("/api/alerts");
 }
 
 export async function getPatterns() {
+  if (USE_MOCK) return mockPatterns;
   return fetchApi<any[]>("/api/patterns");
 }
 
 export async function getEvidence(id?: string) {
-  if (!id) return [];
+  if (USE_MOCK) {
+    if (!id) return mockEvidence;
+    // Basic mock logic if id provided
+    return mockEvidence;
+  }
+  if (!id) return fetchApi<any[]>("/api/evidence");
   return fetchApi<any>(`/api/evidence/${encodeURIComponent(id)}`);
 }
 
 export async function askCopilot(query: string, contextId?: string, history?: {role: string, content: string}[]): Promise<CopilotResponse> {
+  if (USE_MOCK) {
+    return {
+      summary: "This is a mock response from CIRAN Copilot.",
+      chips: ["Mock Data"],
+      confidence: 100,
+      evidence: ["MOCK-1"]
+    };
+  }
   return fetchApi<CopilotResponse>("/api/copilot/query", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -123,6 +192,14 @@ export async function askCopilot(query: string, contextId?: string, history?: {r
 // Mocked for Dashboard visual purposes if backend doesn't have it yet,
 // but we will implement /api/kpis soon. For now we fetch them if route exists, else fallback.
 export async function getKpis() {
+  if (USE_MOCK) {
+    return [
+      { label: "Active Investigations", value: "14", delta: "+2", tone: "info" as const },
+      { label: "High-Priority Signals", value: "3", delta: "Action req", tone: "critical" as const },
+      { label: "Total Entities", value: "481", delta: "+12", tone: "high" as const },
+      { label: "Cross-Case Links", value: "8", delta: "Stable", tone: "medium" as const },
+    ];
+  }
   try {
     return await fetchApi<any[]>("/api/kpis");
   } catch {
@@ -137,40 +214,60 @@ export async function getKpis() {
 
 // Activity and trend can be mocked or fetched if we add a route.
 export async function getActivity() {
-  return [
-    {
-      investigation: "CASE-101",
-      action: "Flagged High Risk",
-      officer: "System",
-      timestamp: "Just now",
-    },
-  ];
+  if (USE_MOCK) {
+    return [
+      {
+        investigation: "CASE-101",
+        action: "Flagged High Risk",
+        officer: "System",
+        timestamp: "Just now",
+      },
+    ];
+  }
+  try {
+    return await fetchApi<any[]>("/api/activity");
+  } catch {
+    return [];
+  }
 }
 
 export async function getEntityResolution() {
-  // Mocked since backend entity resolution just merges nodes inherently.
-  return {
-    confidence: 85,
-    recordA: {
-      title: "CCTNS Record",
-      name: "Ravi Kumar",
-      fields: [{ label: "Phone", value: "9876543210" }],
-    },
-    recordB: {
-      title: "ICJS Record",
-      name: "R. Kumar",
-      fields: [{ label: "Phone", value: "9876543210" }],
-    },
-    matching: ["Phone number matches exactly"],
-    nonMatching: ["Name spelling difference"],
-  };
+  if (USE_MOCK) {
+    return {
+      confidence: 85,
+      recordA: {
+        title: "CCTNS Record",
+        name: "Ravi Kumar",
+        fields: [{ label: "Phone", value: "9876543210" }],
+      },
+      recordB: {
+        title: "ICJS Record",
+        name: "R. Kumar",
+        fields: [{ label: "Phone", value: "9876543210" }],
+      },
+      matching: ["Phone number matches exactly"],
+      nonMatching: ["Name spelling difference"],
+    };
+  }
+  try {
+    return await fetchApi<any>("/api/entity-resolution");
+  } catch {
+    return null;
+  }
 }
 
 export async function getTrend() {
-  return [
-    { month: "Jan", relationships: 40, patterns: 12 },
-    { month: "Feb", relationships: 55, patterns: 18 },
-  ];
+  if (USE_MOCK) {
+    return [
+      { month: "Jan", relationships: 40, patterns: 12 },
+      { month: "Feb", relationships: 55, patterns: 18 },
+    ];
+  }
+  try {
+    return await fetchApi<any[]>("/api/trend");
+  } catch {
+    return [];
+  }
 }
 
 export async function ingestDemoData() {

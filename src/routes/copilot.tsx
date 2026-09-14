@@ -106,9 +106,16 @@ function CopilotPage() {
 
                       {m.content.facts && m.content.facts.length > 0 && (
                         <div className="bg-surface-2 p-3 rounded border border-border/50">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                            Facts
-                          </p>
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              Facts
+                            </p>
+                            {m.content.intent && (
+                              <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                                Intent: {m.content.intent}
+                              </span>
+                            )}
+                          </div>
                           <ul className="list-disc list-outside ml-4 space-y-1">
                             {m.content.facts.map((fact: string, j: number) => (
                               <li key={j} className="text-xs text-foreground">
@@ -193,16 +200,23 @@ function CopilotPage() {
                       )}
 
                       {m.content.evidence && (
-                        <div className="flex flex-wrap gap-2 pt-2 border-t border-border mt-2">
-                          <span className="text-xs text-muted-foreground py-0.5">Sources:</span>
-                          {m.content.evidence.map((ev: string, j: number) => (
-                            <span
-                              key={j}
-                              className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-background border border-border-strong text-muted-foreground"
-                            >
-                              {ev}
-                            </span>
-                          ))}
+                        <div className="flex flex-col gap-2 pt-2 border-t border-border mt-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-xs text-muted-foreground py-0.5">Sources:</span>
+                            {m.content.evidence.map((ev: string, j: number) => (
+                              <span
+                                key={j}
+                                className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-background border border-border-strong text-muted-foreground"
+                              >
+                                {ev}
+                              </span>
+                            ))}
+                          </div>
+                          {m.content.source_count !== undefined && (
+                            <p className="text-[10px] text-muted-foreground">
+                              Aggregated from {m.content.source_count} explicit source records.
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>

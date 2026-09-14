@@ -5,6 +5,8 @@ import { TimelineView } from "@/components/ciran/timeline-view";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { Search, X } from "lucide-react";
+import { getTimeline } from "@/lib/ciran-service";
+import { QueryLoader } from "@/components/ciran/query-loader";
 
 export const Route = createFileRoute("/timeline")({
   head: () => ({ meta: [{ title: "Global Timeline — CIRAN" }] }),
@@ -12,13 +14,12 @@ export const Route = createFileRoute("/timeline")({
 });
 
 function GlobalTimelinePage() {
-  const { data: events, isLoading, isError, refetch } = useQuery({
+  const query = useQuery({
     queryKey: ["global-timeline"],
-    queryFn: async () => {
-      const res = await import("@/lib/ciran-service");
-      return res.getTimeline();
-    },
+    queryFn: getTimeline,
   });
+
+  const events = query.data;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -172,28 +173,25 @@ function GlobalTimelinePage() {
       </Panel>
 
       <Panel title="Timeline Events" bodyClassName="p-4">
-        <div className="mb-4 text-sm text-muted-foreground">
-          {events ? (
-            filteredEvents.length === 0 ? (
-              "No timeline events match the selected filters."
-            ) : (
-              `Showing ${filteredEvents.length} of ${events.length} event${events.length === 1 ? '' : 's'}`
-            )
-          ) : null}
-        </div>
-
-        {isError ? (
-          <div className="py-10 text-center text-destructive">
-            <p className="font-medium">Unable to load timeline events.</p>
-            <ActionButton variant="secondary" onClick={() => refetch()} className="mt-4">
-              Retry
-            </ActionButton>
-          </div>
-        ) : isLoading ? (
-          <div className="py-10 text-center text-muted-foreground">Loading timeline...</div>
-        ) : (
-          <TimelineView events={filteredEvents} />
-        )}
+        <QueryLoader
+          isLoading={query.isLoading}
+          error={query.error}
+          data={query.data}
+          emptyMessage="No intelligence data available."
+        >
+          {() => (
+            <>
+              <div className="mb-4 text-sm text-muted-foreground">
+                {filteredEvents.length === 0 ? (
+                  "No timeline events match the selected filters."
+                ) : (
+                  `Showing ${filteredEvents.length} of ${events?.length || 0} event${events?.length === 1 ? '' : 's'}`
+                )}
+              </div>
+              <TimelineView events={filteredEvents} />
+            </>
+          )}
+        </QueryLoader>
       </Panel>
     </AppShell>
   );
