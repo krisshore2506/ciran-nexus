@@ -176,6 +176,41 @@ class CIRANGraphService:
             res = self.llm_service.generate_copilot_response_with_result(
                 state["query"], sq, [], rr
             )
+            
+            # 1. Map correlations
+            corr_result = state.get("fused_context", {}).get("correlation", {})
+            if corr_result.get("correlations"):
+                from models.domain import CorrelationDetail
+                res.correlations = []
+                for c in corr_result["correlations"]:
+                    res.correlations.append(CorrelationDetail(
+                        type=c.get("type", "Correlation"),
+                        description=c.get("summary", ""),
+                        cases=c.get("cases", []),
+                        entities=c.get("entities", []),
+                        supporting_evidence=corr_result.get("supporting_evidence", []),
+                        source_references=corr_result.get("source_references", []),
+                        confidence=corr_result.get("confidence", 0)
+                    ))
+                    
+            # 2. Map risk indicators
+            risk_result = state.get("fused_context", {}).get("risk", {})
+            if risk_result.get("status") == "SUCCESS" and "risk_score" in risk_result:
+                from models.domain import RiskIndicator, RiskFactor
+                factors = []
+                for f in risk_result.get("factors", []):
+                    factors.append(RiskFactor(
+                        factor=f.get("factor", ""),
+                        weight=f.get("weight", 0),
+                        evidence=f.get("evidence", [])
+                    ))
+                res.risk_indicators = RiskIndicator(
+                    risk_score=risk_result["risk_score"],
+                    risk_level=risk_result["risk_level"],
+                    factors=factors,
+                    source_references=risk_result.get("source_references", [])
+                )
+                
             state["final_response"] = res
         except Exception as e:
             state["errors"].append(str(e))

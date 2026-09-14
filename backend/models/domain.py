@@ -102,6 +102,27 @@ class CopilotTimelineItem(BaseModel):
     day: str
     title: str
 
+class CorrelationDetail(BaseModel):
+    type: str
+    description: str
+    entities: Optional[List[str]] = None
+    cases: Optional[List[str]] = None
+    supporting_evidence: Optional[List[str]] = None
+    source_references: Optional[List[str]] = None
+    confidence: int
+
+class RiskFactor(BaseModel):
+    factor: str
+    weight: int
+    evidence: Optional[List[str]] = None
+    source_references: Optional[List[str]] = None
+
+class RiskIndicator(BaseModel):
+    risk_score: int
+    risk_level: str
+    factors: List[RiskFactor]
+    source_references: Optional[List[str]] = None
+
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str = Field(..., max_length=2000)
@@ -128,6 +149,8 @@ class CopilotResponse(BaseModel):
     intent: Optional[str] = None
     referenced_entities: Optional[List[str]] = None
     source_count: Optional[int] = None
+    correlations: Optional[List[CorrelationDetail]] = None
+    risk_indicators: Optional[RiskIndicator] = None
 
 class RawRecord(BaseModel):
     id: str

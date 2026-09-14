@@ -199,6 +199,53 @@ function CopilotPage() {
                         </div>
                       )}
 
+                      {m.content.correlations && m.content.correlations.length > 0 && (
+                        <div className="bg-surface p-4 rounded border border-border/50">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                            Correlations
+                          </p>
+                          <div className="space-y-4">
+                            {m.content.correlations.map((corr: any, j: number) => (
+                              <div key={j} className="space-y-2">
+                                <p className="text-xs font-semibold text-foreground">{corr.type}</p>
+                                <p className="text-xs text-muted-foreground">{corr.description}</p>
+                                {corr.cases && corr.cases.length > 0 && (
+                                  <div className="flex flex-wrap gap-2 mt-2">
+                                    <span className="text-[10px] text-muted-foreground pt-0.5">Cases:</span>
+                                    {corr.cases.map((c: string, k: number) => (
+                                      <span key={k} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-2 border border-border">{c}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {m.content.risk_indicators && (
+                        <div className="bg-surface p-4 rounded border border-border/50">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                            Risk Indicators
+                          </p>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-semibold text-foreground">Risk Level: {m.content.risk_indicators.risk_level}</span>
+                              <span className="text-[10px] font-mono text-muted-foreground border border-border bg-background px-1.5 py-0.5 rounded">Score: {m.content.risk_indicators.risk_score}</span>
+                            </div>
+                            {m.content.risk_indicators.factors && m.content.risk_indicators.factors.length > 0 && (
+                              <ul className="list-disc list-outside ml-4 space-y-1">
+                                {m.content.risk_indicators.factors.map((factor: any, j: number) => (
+                                  <li key={j} className="text-xs text-muted-foreground">
+                                    <span className="text-foreground">{factor.factor}</span> (Weight: {factor.weight})
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {m.content.evidence && (
                         <div className="flex flex-col gap-2 pt-2 border-t border-border mt-2">
                           <div className="flex flex-wrap items-center gap-2">
