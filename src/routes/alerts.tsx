@@ -27,7 +27,7 @@ function AlertsPage() {
         <div className="py-20 text-center text-muted-foreground">Loading alerts...</div>
       ) : (
         <div className="grid gap-4">
-          {alerts?.map((a: any) => (
+          {alerts?.map((a: unknown) => (
             <div
               key={a.id}
               className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border border-border bg-surface rounded-lg hover:border-primary/50 transition-colors"

@@ -165,7 +165,7 @@ function WorkspacePage() {
                       </div>
                       <p className="mt-1 font-mono text-2xl font-semibold">{entity.priority}</p>
                       <ul className="mt-2 space-y-1">
-                        {entity.priorityFactors?.map((f: any) => (
+                        {entity.priorityFactors?.map((f: unknown) => (
                           <li key={f.label} className="flex justify-between text-[11px]">
                             <span className="text-muted-foreground">{f.label}</span>
                             <span className="font-mono">{f.weight}</span>
@@ -256,12 +256,14 @@ function WorkspacePage() {
                   <QueryLoader
                     isLoading={timelineQuery.isLoading}
                     error={timelineQuery.error}
-                    data={timelineQuery.data?.filter((e: any) => e.entities.includes(selectedId))}
+                    data={timelineQuery.data?.filter((e: unknown) =>
+                      e.entities.includes(selectedId),
+                    )}
                     emptyMessage="No intelligence data available."
                   >
                     {(events) => (
                       <ul className="divide-y divide-border">
-                        {events.map((e: any) => (
+                        {events.map((e: unknown) => (
                           <li key={e.id} className="flex gap-4 px-4 py-3">
                             <span className="w-16 shrink-0 font-mono text-xs text-primary">
                               {e.day}
@@ -310,11 +312,11 @@ function WorkspacePage() {
                   >
                     {(evidence) => (
                       <ul className="divide-y divide-border">
-                        {evidence.map((e: any) => (
+                        {evidence.map((e: unknown) => (
                           <li key={e.id} className="space-y-2 px-4 py-3">
                             <p className="text-sm text-foreground">{e.insight}</p>
                             <div className="flex flex-wrap gap-1.5">
-                              {e.sources.map((s: any) => (
+                              {e.sources.map((s: unknown) => (
                                 <Tag key={s.id}>{s.id}</Tag>
                               ))}
                             </div>
@@ -330,9 +332,13 @@ function WorkspacePage() {
               {tab === "AI Insights" && (
                 <Panel title="Explainable AI">
                   <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground border border-dashed border-border rounded-md">
-                    <p className="mb-4">Real-time explainable AI insights require active Agent analysis.</p>
+                    <p className="mb-4">
+                      Real-time explainable AI insights require active Agent analysis.
+                    </p>
                     <Link to="/copilot">
-                      <ActionButton variant="primary">Ask CIRAN Copilot for AI Analysis</ActionButton>
+                      <ActionButton variant="primary">
+                        Ask CIRAN Copilot for AI Analysis
+                      </ActionButton>
                     </Link>
                   </div>
                 </Panel>

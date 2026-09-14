@@ -46,13 +46,18 @@ def test_entity_resolution_namespace_isolation():
     rels = engine.get_relations()
     assert len(rels) == 0, "Intra-dataset merge should be blocked"
 
+from unittest.mock import MagicMock
+
 def test_graph_multi_hop_and_provenance():
-    engine = RelationshipEngine()
-    gi = GraphIntelligenceService(engine)
-    
-    # A -> B -> C
-    engine.add_relation("A", "B", "communication", "called", 90, "REC-1")
-    engine.add_relation("B", "C", "financial", "transfer", 90, "REC-2")
+    mock_neo4j = MagicMock()
+    mock_neo4j.find_shortest_path.return_value = {
+        "path": ["A", "B", "C"],
+        "relationships": [
+            {"sourceRecord": "REC-1"},
+            {"sourceRecord": "REC-2"}
+        ]
+    }
+    gi = GraphIntelligenceService(mock_neo4j)
     
     path, evidence = gi.find_shortest_path("A", "C")
     assert path == ["A", "B", "C"]

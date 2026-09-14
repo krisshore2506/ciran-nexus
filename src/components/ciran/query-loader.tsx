@@ -18,7 +18,7 @@ export function QueryLoader<T>({
   children,
   loadingMessage = "Loading data...",
   emptyMessage = "No data found.",
-  isEmpty = (d: any) => (Array.isArray(d) ? d.length === 0 : !d),
+  isEmpty = (d: unknown) => (Array.isArray(d) ? d.length === 0 : !d),
 }: QueryLoaderProps<T>) {
   if (isLoading) {
     return (

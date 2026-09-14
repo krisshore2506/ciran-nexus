@@ -98,7 +98,9 @@ function GlobalTimelinePage() {
       <Panel className="mb-4">
         <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-end">
           <div className="flex-1 space-y-1.5">
-            <label htmlFor="search" className="text-xs font-medium text-foreground">Search</label>
+            <label htmlFor="search" className="text-xs font-medium text-foreground">
+              Search
+            </label>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
               <input
@@ -111,9 +113,11 @@ function GlobalTimelinePage() {
               />
             </div>
           </div>
-          
+
           <div className="w-full lg:w-48 space-y-1.5">
-            <label htmlFor="category" className="text-xs font-medium text-foreground">Category</label>
+            <label htmlFor="category" className="text-xs font-medium text-foreground">
+              Category
+            </label>
             <select
               id="category"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
@@ -122,13 +126,17 @@ function GlobalTimelinePage() {
             >
               <option value="">All Categories</option>
               {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="w-full lg:w-48 space-y-1.5">
-            <label htmlFor="entity" className="text-xs font-medium text-foreground">Entity</label>
+            <label htmlFor="entity" className="text-xs font-medium text-foreground">
+              Entity
+            </label>
             <select
               id="entity"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
@@ -137,7 +145,9 @@ function GlobalTimelinePage() {
             >
               <option value="">All Entities</option>
               {entities.map((e) => (
-                <option key={e} value={e}>{e}</option>
+                <option key={e} value={e}>
+                  {e}
+                </option>
               ))}
             </select>
           </div>
@@ -182,11 +192,9 @@ function GlobalTimelinePage() {
           {() => (
             <>
               <div className="mb-4 text-sm text-muted-foreground">
-                {filteredEvents.length === 0 ? (
-                  "No timeline events match the selected filters."
-                ) : (
-                  `Showing ${filteredEvents.length} of ${events?.length || 0} event${events?.length === 1 ? '' : 's'}`
-                )}
+                {filteredEvents.length === 0
+                  ? "No timeline events match the selected filters."
+                  : `Showing ${filteredEvents.length} of ${events?.length || 0} event${events?.length === 1 ? "" : "s"}`}
               </div>
               <TimelineView events={filteredEvents} />
             </>

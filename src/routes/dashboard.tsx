@@ -84,7 +84,12 @@ function DashboardPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <QueryLoader isLoading={kpisQuery.isLoading} error={kpisQuery.error} data={kpisQuery.data} emptyMessage="No intelligence data available.">
+        <QueryLoader
+          isLoading={kpisQuery.isLoading}
+          error={kpisQuery.error}
+          data={kpisQuery.data}
+          emptyMessage="No intelligence data available."
+        >
           {(kpis) => (
             <>
               {kpis.map((k) => (

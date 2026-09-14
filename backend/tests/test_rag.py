@@ -11,7 +11,7 @@ def test_deterministic_chunking():
     assert len(chunks) == 3
     assert chunks[0] == "1234567890"
     assert chunks[1] == "67890abcde"
-    assert chunks[2] == "bcdefghij"
+    assert chunks[2] == "abcdefghij"
 
 def test_embedding_service_no_key():
     # If no API key is provided, it should fail gracefully

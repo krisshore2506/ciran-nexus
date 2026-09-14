@@ -37,7 +37,7 @@ function EvidencePage() {
       >
         {(evidence) => (
           <div className="grid gap-6">
-            {evidence.map((item: any) => (
+            {evidence.map((item: unknown) => (
               <Panel key={item.id} title={item.insight} bodyClassName="p-0">
                 <div className="px-5 py-3 border-b border-border/50 bg-surface/30 flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -57,7 +57,7 @@ function EvidencePage() {
                       Supporting Source Records
                     </h4>
                     <ul className="space-y-2">
-                      {item.sources.map((src: any, i: number) => (
+                      {item.sources.map((src: unknown, i: number) => (
                         <li
                           key={i}
                           className="flex flex-col gap-1 rounded bg-surface border border-border-strong p-2.5 hover:border-primary/50 transition-colors"
@@ -79,7 +79,7 @@ function EvidencePage() {
                       Analyst Audit History
                     </h4>
                     <div className="relative ml-2 space-y-4 border-l border-border pl-4 py-1">
-                      {item.audit.map((entry: any, i: number) => (
+                      {item.audit.map((entry: unknown, i: number) => (
                         <div key={i} className="relative">
                           <div className="absolute -left-[21px] top-1 h-2 w-2 rounded-full bg-border ring-4 ring-surface" />
                           <div className="flex justify-between items-start mb-0.5">

@@ -42,7 +42,7 @@ function EntityResolutionPage() {
                     </p>
                     <p className="text-lg font-medium text-foreground mb-4">{data.recordA.name}</p>
                     <div className="space-y-2">
-                      {data.recordA.fields.map((f: any, i: number) => (
+                      {data.recordA.fields.map((f: unknown, i: number) => (
                         <div key={i} className="flex justify-between text-sm">
                           <span className="text-muted-foreground">{f.label}</span>
                           <span className="font-mono text-foreground">{f.value}</span>
@@ -57,7 +57,7 @@ function EntityResolutionPage() {
                     </p>
                     <p className="text-lg font-medium text-foreground mb-4">{data.recordB.name}</p>
                     <div className="space-y-2">
-                      {data.recordB.fields.map((f: any, i: number) => (
+                      {data.recordB.fields.map((f: unknown, i: number) => (
                         <div key={i} className="flex justify-between text-sm">
                           <span className="text-muted-foreground">{f.label}</span>
                           <span className="font-mono text-foreground">{f.value}</span>

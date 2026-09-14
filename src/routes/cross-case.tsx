@@ -35,12 +35,14 @@ function CrossCasePage() {
       >
         {(links) => (
           <div className="grid gap-6">
-            {links.map((link: any, i: number) => (
+            {links.map((link: unknown, i: number) => (
               <Panel key={i} title={`Connected: ${link.cases.join(" · ")}`} bodyClassName="p-4">
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-4">
-                      <SeverityBadge severity="high">Potential Cross-Case Relationship</SeverityBadge>
+                      <SeverityBadge severity="high">
+                        Potential Cross-Case Relationship
+                      </SeverityBadge>
                       <span className="font-mono text-[10px] text-muted-foreground bg-surface-2 px-1.5 py-0.5 rounded border border-border">
                         Confidence {link.confidence}%
                       </span>
@@ -58,7 +60,7 @@ function CrossCasePage() {
                         Shared Attributes
                       </p>
                       <ul className="space-y-2">
-                        {link.shared.map((s: any, j: number) => (
+                        {link.shared.map((s: unknown, j: number) => (
                           <li key={j} className="text-sm text-foreground flex items-center gap-3">
                             <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
                             <span className="text-muted-foreground min-w-[80px]">{s.type}:</span>

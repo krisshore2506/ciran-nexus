@@ -47,7 +47,9 @@ export async function getEntities(query?: string): Promise<Entity[]> {
   if (USE_MOCK) {
     if (query) {
       const q = query.toLowerCase();
-      return mockEntities.filter((e) => e.label.toLowerCase().includes(q) || e.id.toLowerCase().includes(q));
+      return mockEntities.filter(
+        (e) => e.label.toLowerCase().includes(q) || e.id.toLowerCase().includes(q),
+      );
     }
     return mockEntities;
   }
@@ -72,7 +74,7 @@ export async function searchEntities(query: string): Promise<Entity[]> {
 
 export async function getCases(): Promise<Entity[]> {
   if (USE_MOCK) {
-    return mockEntities.filter(e => e.type === "case");
+    return mockEntities.filter((e) => e.type === "case");
   }
   return fetchApi<Entity[]>("/api/cases");
 }
@@ -82,7 +84,7 @@ export async function getNetwork(filters?: {
   relationTypes?: RelationType[];
 }): Promise<{ nodes: Entity[]; edges: Relation[] }> {
   let data: { nodes: Entity[]; edges: Relation[] };
-  
+
   if (USE_MOCK) {
     data = { nodes: mockEntities, edges: mockRelations };
   } else {
@@ -138,29 +140,29 @@ export async function getNeighbours(id: string): Promise<{ relation: Relation; o
 export async function getTimeline(id?: string) {
   if (USE_MOCK) {
     if (id) {
-      return mockTimeline.filter(t => t.entities.includes(id));
+      return mockTimeline.filter((t) => t.entities.includes(id));
     }
     return mockTimeline;
   }
   if (id) {
-    return fetchApi<any[]>(`/api/entities/${encodeURIComponent(id)}/timeline`);
+    return fetchApi<unknown[]>(`/api/entities/${encodeURIComponent(id)}/timeline`);
   }
-  return fetchApi<any[]>("/api/timeline"); // fallback if needed
+  return fetchApi<unknown[]>("/api/timeline"); // fallback if needed
 }
 
 export async function getCrossCaseLinks() {
   if (USE_MOCK) return mockCrossCaseLinks;
-  return fetchApi<any[]>("/api/cross-case");
+  return fetchApi<unknown[]>("/api/cross-case");
 }
 
 export async function getIntelligenceAlerts() {
   if (USE_MOCK) return mockAlerts;
-  return fetchApi<any[]>("/api/alerts");
+  return fetchApi<unknown[]>("/api/alerts");
 }
 
 export async function getPatterns() {
   if (USE_MOCK) return mockPatterns;
-  return fetchApi<any[]>("/api/patterns");
+  return fetchApi<unknown[]>("/api/patterns");
 }
 
 export async function getEvidence(id?: string) {
@@ -169,17 +171,21 @@ export async function getEvidence(id?: string) {
     // Basic mock logic if id provided
     return mockEvidence;
   }
-  if (!id) return fetchApi<any[]>("/api/evidence");
-  return fetchApi<any>(`/api/evidence/${encodeURIComponent(id)}`);
+  if (!id) return fetchApi<unknown[]>("/api/evidence");
+  return fetchApi<unknown>(`/api/evidence/${encodeURIComponent(id)}`);
 }
 
-export async function askCopilot(query: string, contextId?: string, history?: {role: string, content: string}[]): Promise<CopilotResponse> {
+export async function askCopilot(
+  query: string,
+  contextId?: string,
+  history?: { role: string; content: string }[],
+): Promise<CopilotResponse> {
   if (USE_MOCK) {
     return {
       summary: "This is a mock response from CIRAN Copilot.",
       chips: ["Mock Data"],
       confidence: 100,
-      evidence: ["MOCK-1"]
+      evidence: ["MOCK-1"],
     };
   }
   return fetchApi<CopilotResponse>("/api/copilot/query", {
@@ -195,13 +201,18 @@ export async function getKpis() {
   if (USE_MOCK) {
     return [
       { label: "Active Investigations", value: "14", delta: "+2", tone: "info" as const },
-      { label: "High-Priority Signals", value: "3", delta: "Action req", tone: "critical" as const },
+      {
+        label: "High-Priority Signals",
+        value: "3",
+        delta: "Action req",
+        tone: "critical" as const,
+      },
       { label: "Total Entities", value: "481", delta: "+12", tone: "high" as const },
       { label: "Cross-Case Links", value: "8", delta: "Stable", tone: "medium" as const },
     ];
   }
   try {
-    return await fetchApi<any[]>("/api/kpis");
+    return await fetchApi<unknown[]>("/api/kpis");
   } catch {
     return [
       { label: "Active Investigations", value: "-", delta: "Pending", tone: "info" as const },
@@ -225,7 +236,7 @@ export async function getActivity() {
     ];
   }
   try {
-    return await fetchApi<any[]>("/api/activity");
+    return await fetchApi<unknown[]>("/api/activity");
   } catch {
     return [];
   }
@@ -250,7 +261,7 @@ export async function getEntityResolution() {
     };
   }
   try {
-    return await fetchApi<any>("/api/entity-resolution");
+    return await fetchApi<unknown>("/api/entity-resolution");
   } catch {
     return null;
   }
@@ -264,7 +275,7 @@ export async function getTrend() {
     ];
   }
   try {
-    return await fetchApi<any[]>("/api/trend");
+    return await fetchApi<unknown[]>("/api/trend");
   } catch {
     return [];
   }

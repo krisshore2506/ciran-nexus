@@ -5,7 +5,6 @@ from services.relationship_engine import RelationshipEngine
 from services.correlation_engine import CorrelationEngine
 from services.risk_engine import RiskEngine
 from services.evidence_engine import EvidenceEngine
-from ai.llm_service import LLMService
 from services.report_generator import ReportGenerator
 from services.entity_resolution import EntityResolutionService
 from services.graph_intelligence import GraphIntelligenceService
@@ -30,7 +29,6 @@ class AppState:
         self.correlation_engine = CorrelationEngine(self.relationship_engine, self.graph_intelligence)
         self.risk_engine = RiskEngine(self.relationship_engine)
         self.evidence_engine = EvidenceEngine()
-        self.llm_service = LLMService()
         self.query_parser = QueryParser()
         self.report_generator = ReportGenerator()
 

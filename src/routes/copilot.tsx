@@ -13,7 +13,7 @@ export const Route = createFileRoute("/copilot")({
 
 function CopilotPage() {
   const [query, setQuery] = useState("");
-  const [messages, setMessages] = useState<{ role: "user" | "copilot"; content: any }[]>([]);
+  const [messages, setMessages] = useState<{ role: "user" | "copilot"; content: unknown }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -33,9 +33,9 @@ function CopilotPage() {
     setIsLoading(true);
 
     try {
-      const history = messages.map(m => ({
+      const history = messages.map((m) => ({
         role: m.role === "copilot" ? "assistant" : "user",
-        content: m.role === "copilot" ? (m.content.summary || "") : m.content
+        content: m.role === "copilot" ? m.content.summary || "" : m.content,
       }));
 
       const res = await fetch("/api/copilot/query", {
@@ -48,7 +48,10 @@ function CopilotPage() {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "copilot", content: { summary: "I couldn't process that query. Please try again.", chips: [] } },
+        {
+          role: "copilot",
+          content: { summary: "I couldn't process that query. Please try again.", chips: [] },
+        },
       ]);
     } finally {
       setIsLoading(false);
@@ -101,7 +104,9 @@ function CopilotPage() {
                   ) : (
                     <div className="space-y-4">
                       {m.content.summary && (
-                        <p className="text-sm text-foreground leading-relaxed">{m.content.summary}</p>
+                        <p className="text-sm text-foreground leading-relaxed">
+                          {m.content.summary}
+                        </p>
                       )}
 
                       {m.content.facts && m.content.facts.length > 0 && (
@@ -141,12 +146,16 @@ function CopilotPage() {
                         </div>
                       )}
 
-                      {(m.content.caution || (m.content.limitations && m.content.limitations.length > 0)) && (
+                      {(m.content.caution ||
+                        (m.content.limitations && m.content.limitations.length > 0)) && (
                         <div className="flex flex-col gap-2 bg-background p-3 rounded border border-border-strong">
                           {m.content.caution && (
                             <div className="flex items-start gap-2">
                               <AlertTriangle className="size-4 text-high shrink-0 mt-0.5" />
-                              <p className="text-xs text-muted-foreground">Automated analysis based on CIRAN intelligence records. Verify all source records.</p>
+                              <p className="text-xs text-muted-foreground">
+                                Automated analysis based on CIRAN intelligence records. Verify all
+                                source records.
+                              </p>
                             </div>
                           )}
                           {m.content.limitations && m.content.limitations.length > 0 && (
@@ -187,7 +196,7 @@ function CopilotPage() {
                             Event Timeline
                           </p>
                           <ul className="space-y-2">
-                            {m.content.timeline.map((event: any, j: number) => (
+                            {m.content.timeline.map((event: unknown, j: number) => (
                               <li key={j} className="flex gap-3 text-xs">
                                 <span className="font-mono text-primary font-medium">
                                   {event.day}
@@ -205,15 +214,22 @@ function CopilotPage() {
                             Correlations
                           </p>
                           <div className="space-y-4">
-                            {m.content.correlations.map((corr: any, j: number) => (
+                            {m.content.correlations.map((corr: unknown, j: number) => (
                               <div key={j} className="space-y-2">
                                 <p className="text-xs font-semibold text-foreground">{corr.type}</p>
                                 <p className="text-xs text-muted-foreground">{corr.description}</p>
                                 {corr.cases && corr.cases.length > 0 && (
                                   <div className="flex flex-wrap gap-2 mt-2">
-                                    <span className="text-[10px] text-muted-foreground pt-0.5">Cases:</span>
+                                    <span className="text-[10px] text-muted-foreground pt-0.5">
+                                      Cases:
+                                    </span>
                                     {corr.cases.map((c: string, k: number) => (
-                                      <span key={k} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-2 border border-border">{c}</span>
+                                      <span
+                                        key={k}
+                                        className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-2 border border-border"
+                                      >
+                                        {c}
+                                      </span>
                                     ))}
                                   </div>
                                 )}
@@ -230,18 +246,26 @@ function CopilotPage() {
                           </p>
                           <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-foreground">Risk Level: {m.content.risk_indicators.risk_level}</span>
-                              <span className="text-[10px] font-mono text-muted-foreground border border-border bg-background px-1.5 py-0.5 rounded">Score: {m.content.risk_indicators.risk_score}</span>
+                              <span className="text-xs font-semibold text-foreground">
+                                Risk Level: {m.content.risk_indicators.risk_level}
+                              </span>
+                              <span className="text-[10px] font-mono text-muted-foreground border border-border bg-background px-1.5 py-0.5 rounded">
+                                Score: {m.content.risk_indicators.risk_score}
+                              </span>
                             </div>
-                            {m.content.risk_indicators.factors && m.content.risk_indicators.factors.length > 0 && (
-                              <ul className="list-disc list-outside ml-4 space-y-1">
-                                {m.content.risk_indicators.factors.map((factor: any, j: number) => (
-                                  <li key={j} className="text-xs text-muted-foreground">
-                                    <span className="text-foreground">{factor.factor}</span> (Weight: {factor.weight})
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
+                            {m.content.risk_indicators.factors &&
+                              m.content.risk_indicators.factors.length > 0 && (
+                                <ul className="list-disc list-outside ml-4 space-y-1">
+                                  {m.content.risk_indicators.factors.map(
+                                    (factor: unknown, j: number) => (
+                                      <li key={j} className="text-xs text-muted-foreground">
+                                        <span className="text-foreground">{factor.factor}</span>{" "}
+                                        (Weight: {factor.weight})
+                                      </li>
+                                    ),
+                                  )}
+                                </ul>
+                              )}
                           </div>
                         </div>
                       )}

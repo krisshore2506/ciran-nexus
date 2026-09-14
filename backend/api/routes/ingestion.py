@@ -16,9 +16,11 @@ class IngestionRequest(BaseModel):
 
 @router.post("/load")
 def load_data(req: Optional[IngestionRequest] = None):
-    # Phase 1 Legacy support for zero frontend modification
+    import os
     if not req or not req.dataset:
-        raw_records = load_json("data/sample/synthetic_data.json")
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        file_path = os.path.join(base_dir, "data", "sample", "synthetic_data.json")
+        raw_records = load_json(file_path)
         normalized = normalize_records(raw_records)
         
         # Process through pipeline

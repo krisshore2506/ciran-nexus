@@ -80,8 +80,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "CIRAN — Criminal Intelligence & Relationship Analysis Network" },
       { name: "description", content: "Criminal Intelligence & Relationship Analysis Network" },
       { name: "author", content: "CIRAN" },
-      { property: "og:title", content: "CIRAN — Criminal Intelligence & Relationship Analysis Network" },
-      { property: "og:description", content: "Criminal Intelligence & Relationship Analysis Network" },
+      {
+        property: "og:title",
+        content: "CIRAN — Criminal Intelligence & Relationship Analysis Network",
+      },
+      {
+        property: "og:description",
+        content: "Criminal Intelligence & Relationship Analysis Network",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@CIRAN" },

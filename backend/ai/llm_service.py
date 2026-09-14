@@ -2,14 +2,12 @@ import json
 from typing import List, Any, Optional
 from models.domain import CopilotResponse, CopilotTimelineItem, Entity, ChatMessage, StructuredQuery, RetrievalResult
 from services.query_parser import QueryParser
-from services.copilot_retrieval import CopilotRetrievalService
 from ai.provider.openai_provider import OpenAIProvider
 from config.settings import settings
 
 class LLMService:
     def __init__(self):
         self.provider = settings.LLM_PROVIDER
-        self.retrieval_service = CopilotRetrievalService()
         self.ai_provider = OpenAIProvider()
         
     def generate_copilot_response_with_result(self, query: str, structured_query: StructuredQuery, extracted_entities: List[Entity], retrieval_result: RetrievalResult) -> CopilotResponse:

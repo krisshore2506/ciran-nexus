@@ -27,7 +27,7 @@ function PatternsPage() {
         <div className="py-20 text-center text-muted-foreground">Loading patterns...</div>
       ) : (
         <div className="grid gap-6 xl:grid-cols-2">
-          {patterns?.map((p: any) => (
+          {patterns?.map((p: unknown) => (
             <Panel key={p.id} title={p.category} bodyClassName="p-5">
               <div className="flex items-start justify-between gap-4 mb-5">
                 <div>

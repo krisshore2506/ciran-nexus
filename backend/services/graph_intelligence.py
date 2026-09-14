@@ -32,8 +32,13 @@ class GraphIntelligenceService:
     def _calculate_degree_centrality(self, entities: List[Entity]) -> Dict[str, int]:
         centrality = {}
         for ent in entities:
-            metrics = self.neo4j_service.get_graph_metrics(ent.id)
-            centrality[ent.id] = metrics.get("degree", 0)
+            if hasattr(self.neo4j_service, "get_graph_metrics"):
+                metrics = self.neo4j_service.get_graph_metrics(ent.id)
+                centrality[ent.id] = metrics.get("degree", 0)
+            elif hasattr(self.neo4j_service, "get_relations"):
+                # Fallback for legacy RelationshipEngine
+                degree = sum(1 for r in self.neo4j_service.get_relations() if r.source == ent.id or r.target == ent.id)
+                centrality[ent.id] = degree
         return centrality
 
     def find_shortest_path(self, start_entity_id: str, end_entity_id: str, max_depth: int = 3) -> Optional[Tuple[List[str], List[str]]]:
@@ -41,6 +46,8 @@ class GraphIntelligenceService:
         Finds shortest path between two entities using Neo4j shortestPath.
         Returns Tuple(path_node_ids, evidence_source_record_ids).
         """
+        if not hasattr(self.neo4j_service, "find_shortest_path"):
+            return None
         path_info = self.neo4j_service.find_shortest_path(start_entity_id, end_entity_id, max_depth)
         
         if not path_info:

@@ -166,8 +166,6 @@ function NetworkPage() {
                   </header>
 
                   <div className="space-y-4 p-4">
-
-
                     <div>
                       <p className="mb-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
                         Connected entities

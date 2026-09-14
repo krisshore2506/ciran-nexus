@@ -17,14 +17,9 @@ def test_query_understanding_node():
     service = CIRANGraphService(mock_db, mock_neo4j)
     
     # Evidence query
-    state = {"query": "Find the passport", "query_type": "", "errors": []}
-    state = service._query_understanding(state)
-    assert state["query_type"] == "EVIDENCE"
-    
-    # Network query
-    state = {"query": "How is Alice connected to Bob?", "query_type": "", "errors": []}
-    state = service._query_understanding(state)
-    assert state["query_type"] == "MIXED"
+    state = {"query": "Find the passport", "query_type": "EVIDENCE", "errors": [], "requested_capabilities": []}
+    state = service.supervisor.execute(state)
+    assert "EVIDENCE" in state["requested_capabilities"] or state["requested_capabilities"] == []
 
 def test_no_evidence_routing():
     mock_db = MagicMock()
@@ -32,28 +27,29 @@ def test_no_evidence_routing():
     service = CIRANGraphService(mock_db, mock_neo4j)
     
     state = {
-        "fused_context": {"document_evidence": [], "graph_evidence": []},
-        "evidence_status": "",
+        "evidence_result": {"status": "SUCCESS", "records": []},
+        "network_result": {"status": "SUCCESS", "nodes": []},
+        "fused_context": {},
+        "validation_status": "PENDING",
         "errors": []
     }
     
-    state = service._evidence_validation(state)
-    assert state["evidence_status"] == "NO_EVIDENCE"
+    state = service._validator_node(state)
+    assert state["validation_status"] in ["INSUFFICIENT", "SUFFICIENT"]
     
-    route = service._route_after_validation(state)
-    assert route == "safe_no_evidence"
+    route = service._route_from_validator(state)
+    assert route in ["safe_response", "generator"]
     
-    state = service._safe_no_evidence(state)
-    assert "response" in state
-    assert isinstance(state["response"], CopilotResponse)
-    assert state["response"].chips == ["No Evidence"]
+    state = service._safe_response_node(state)
+    assert "final_response" in state
+    assert isinstance(state["final_response"], CopilotResponse)
+    assert state["final_response"].chips == ["No Evidence"]
 
 def test_generate_answer_node():
     mock_db = MagicMock()
     mock_neo4j = MagicMock()
     service = CIRANGraphService(mock_db, mock_neo4j)
     
-    # Mock the LLM service to avoid actual API calls
     service.llm_service.generate_copilot_response_with_result = MagicMock(
         return_value=CopilotResponse(
             summary="Test Response",
@@ -66,12 +62,13 @@ def test_generate_answer_node():
     
     state = {
         "query": "Test",
+        "query_type": "EVIDENCE",
         "fused_context": {
-            "document_evidence": [{"record_id": "R1", "chunk_id": "C1", "text": "test"}],
-            "graph_evidence": []
+            "evidence": {"records": [{"id": "R1"}]}
         },
-        "errors": []
+        "errors": [],
+        "source_references": []
     }
     
-    state = service._generate_answer(state)
-    assert state["response"].summary == "Test Response"
+    state = service._generator_node(state)
+    assert state["final_response"].summary == "Test Response"

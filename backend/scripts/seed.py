@@ -43,21 +43,21 @@ def seed_database():
     
     print(f"Extracted {len(entities)} Entities and {len(relations)} Relationships.")
     
-    # 1. Seed PostgreSQL
+        # 1. Seed PostgreSQL
     print("Seeding PostgreSQL...")
     db = SessionLocal()
     try:
         # Seed RawRecords
         for raw in raw_records:
             record_db = RawRecord(
-                id=raw["id"],
-                type=raw["type"],
-                timestamp=raw["timestamp"],
-                source_system=raw["source_system"],
-                content=raw.get("content", {})
+                id=raw.id,
+                type=raw.type,
+                timestamp=raw.timestamp,
+                source_system=raw.source_system,
+                content=raw.content or {}
             )
             db.merge(record_db)
-            
+
         # Seed Entities
         for ent in entities:
             ent_db = Entity(
@@ -74,7 +74,7 @@ def seed_database():
                 priorityFactors=[pf.model_dump() for pf in (ent.priorityFactors or [])]
             )
             db.merge(ent_db)
-            
+
         db.commit()
         print("PostgreSQL Seeding Complete.")
     except Exception as e:

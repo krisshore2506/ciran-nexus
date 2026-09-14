@@ -21,13 +21,13 @@ export function TimelineView({ events }: { events: TimelineEvent[] }) {
           <div className="absolute -left-[31px] top-1.5 flex size-4 items-center justify-center rounded-full bg-surface border border-border-strong ring-4 ring-background group-hover:border-primary transition-colors">
             <Clock className="size-2 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
-          <div 
+          <div
             className="rounded-md border border-transparent p-3 -ml-3 transition-colors hover:bg-surface-2 hover:border-border cursor-pointer"
             onClick={() => setExpandedId(expandedId === event.id ? null : event.id)}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 setExpandedId(expandedId === event.id ? null : event.id);
               }
@@ -41,14 +41,16 @@ export function TimelineView({ events }: { events: TimelineEvent[] }) {
             <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground line-clamp-2">
               {event.detail}
             </p>
-            
+
             {expandedId !== event.id && (
               <div className="mt-3 flex items-center gap-2 font-mono text-[10px] text-muted-foreground">
                 <span className="rounded bg-background border border-border px-1.5 py-0.5">
                   Source: {event.record}
                 </span>
                 {event.entities && event.entities.length > 0 && (
-                  <span className="text-muted-foreground/60">+{event.entities.length} entities</span>
+                  <span className="text-muted-foreground/60">
+                    +{event.entities.length} entities
+                  </span>
                 )}
               </div>
             )}
@@ -56,12 +58,16 @@ export function TimelineView({ events }: { events: TimelineEvent[] }) {
             {expandedId === event.id && (
               <div className="mt-4 pt-4 border-t border-border space-y-4">
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground block mb-1">Date & Time</span>
+                  <span className="text-xs font-medium text-muted-foreground block mb-1">
+                    Date & Time
+                  </span>
                   <span className="font-mono text-xs text-foreground">{event.date}</span>
                 </div>
 
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground block mb-1">Source Record</span>
+                  <span className="text-xs font-medium text-muted-foreground block mb-1">
+                    Source Record
+                  </span>
                   <span className="font-mono text-xs rounded bg-background border border-border px-1.5 py-0.5 text-muted-foreground">
                     {event.record}
                   </span>
@@ -69,10 +75,15 @@ export function TimelineView({ events }: { events: TimelineEvent[] }) {
 
                 {event.entities && event.entities.length > 0 && (
                   <div>
-                    <span className="text-xs font-medium text-muted-foreground block mb-2">Associated Entities</span>
+                    <span className="text-xs font-medium text-muted-foreground block mb-2">
+                      Associated Entities
+                    </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {event.entities.map(e => (
-                        <span key={e} className="inline-flex items-center rounded border border-border bg-surface-2 px-1.5 py-0.5 text-[11px] font-mono text-foreground">
+                      {event.entities.map((e) => (
+                        <span
+                          key={e}
+                          className="inline-flex items-center rounded border border-border bg-surface-2 px-1.5 py-0.5 text-[11px] font-mono text-foreground"
+                        >
                           {e}
                         </span>
                       ))}

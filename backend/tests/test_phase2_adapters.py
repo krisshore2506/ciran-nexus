@@ -1,3 +1,4 @@
+import os
 import pytest
 from fastapi.testclient import TestClient
 from main import app
@@ -5,9 +6,13 @@ from ingestion.adapters import get_adapter
 from models.unified import SourceRecord
 
 client = TestClient(app)
+base_dir = os.path.dirname(os.path.dirname(__file__))
+
+def get_data_path(rel_path):
+    return os.path.join(base_dir, rel_path)
 
 def test_crime_adapter_streaming():
-    adapter = get_adapter("crime", "data/sample/crime_test.csv")
+    adapter = get_adapter("crime", get_data_path("data/sample/crime_test.csv"))
     records = list(adapter.stream_records())
     
     assert len(records) == 2
@@ -23,7 +28,7 @@ def test_crime_adapter_streaming():
     assert rec.relationships[0].relationship_type == "OCCURRED_AT"
 
 def test_paysim_streaming_and_max_rows():
-    adapter = get_adapter("paysim", "data/sample/paysim_test.csv")
+    adapter = get_adapter("paysim", get_data_path("data/sample/paysim_test.csv"))
     records = list(adapter.stream_records(max_rows=2))
     
     assert len(records) == 2
@@ -38,7 +43,7 @@ def test_paysim_streaming_and_max_rows():
 def test_api_ingest_email():
     payload = {
         "dataset": "email",
-        "file_path": "data/sample/email_test.csv"
+        "file_path": get_data_path("data/sample/email_test.csv")
     }
     response = client.post("/api/ingestion/load", json=payload)
     
@@ -50,10 +55,12 @@ def test_api_ingest_email():
     assert data["adapter_validation"]["accepted"] == 3
 
 def test_provenance_preservation():
-    adapter = get_adapter("cdr", "data/sample/cdr_test.csv")
+    file_path = get_data_path("data/sample/cdr_test.csv")
+    adapter = get_adapter("cdr", file_path)
     records = list(adapter.stream_records())
     rec = records[0]
     
     assert rec.provenance.source_dataset == "itu_cdr"
-    assert rec.provenance.source_file == "data/sample/cdr_test.csv"
+    assert rec.provenance.source_file == file_path
     assert "CDR-" in rec.provenance.source_record_id
+
