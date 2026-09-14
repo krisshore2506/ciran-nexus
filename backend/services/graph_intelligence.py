@@ -1,17 +1,16 @@
-from typing import List, Dict, Set, Tuple, Optional
-from collections import deque
-from models.domain import Entity, Relation, PatternInsight
-from services.relationship_engine import RelationshipEngine
+from typing import List, Dict, Tuple, Optional
+from models.domain import Entity, PatternInsight
+from services.neo4j_graph_service import Neo4jGraphService
 import uuid
 
 class GraphIntelligenceService:
-    def __init__(self, relationship_engine: RelationshipEngine):
-        self.relationship_engine = relationship_engine
+    def __init__(self, neo4j_service: Neo4jGraphService):
+        self.neo4j_service = neo4j_service
         
     def generate_insights(self, entities: List[Entity]) -> List[PatternInsight]:
         insights = []
         
-        # Calculate centrality
+        # Calculate centrality using neo4j metrics
         centrality = self._calculate_degree_centrality(entities)
         
         # Identify top influential entities
@@ -28,49 +27,26 @@ class GraphIntelligenceService:
                     evidence=[] # Calculated insight, relies on node
                 ))
                 
-        # Find paths between key entities (e.g. across cases)
-        # For simplicity, we just expose the pathfinding method to be used by the CorrelationEngine
-        
         return insights
         
     def _calculate_degree_centrality(self, entities: List[Entity]) -> Dict[str, int]:
         centrality = {}
         for ent in entities:
-            neighbors = self.relationship_engine.get_neighbors(ent.id)
-            centrality[ent.id] = len(neighbors)
+            metrics = self.neo4j_service.get_graph_metrics(ent.id)
+            centrality[ent.id] = metrics.get("degree", 0)
         return centrality
 
     def find_shortest_path(self, start_entity_id: str, end_entity_id: str, max_depth: int = 3) -> Optional[Tuple[List[str], List[str]]]:
         """
-        Finds shortest path between two entities using only existing source edges.
+        Finds shortest path between two entities using Neo4j shortestPath.
         Returns Tuple(path_node_ids, evidence_source_record_ids).
         """
-        if start_entity_id == end_entity_id:
+        path_info = self.neo4j_service.find_shortest_path(start_entity_id, end_entity_id, max_depth)
+        
+        if not path_info:
             return None
             
-        queue = deque([(start_entity_id, [start_entity_id], [])])
-        visited = {start_entity_id}
+        path_nodes = path_info["path"]
+        evidence_sources = [r["sourceRecord"] for r in path_info["relationships"] if r.get("sourceRecord") and r.get("sourceRecord") != "RESOLUTION_ENGINE"]
         
-        while queue:
-            current_id, path, evidence = queue.popleft()
-            
-            if len(path) > max_depth + 1:
-                continue
-                
-            neighbors = self.relationship_engine.get_neighbors(current_id)
-            for rel in neighbors:
-                next_id = rel.target if rel.source == current_id else rel.source
-                
-                if next_id == end_entity_id:
-                    new_path = path + [next_id]
-                    # Only collect actual source records, skip RESOLUTION_ENGINE
-                    new_evidence = evidence + ([rel.sourceRecord] if rel.sourceRecord != "RESOLUTION_ENGINE" else [])
-                    return new_path, list(set(new_evidence))
-                    
-                if next_id not in visited:
-                    visited.add(next_id)
-                    new_path = path + [next_id]
-                    new_evidence = evidence + ([rel.sourceRecord] if rel.sourceRecord != "RESOLUTION_ENGINE" else [])
-                    queue.append((next_id, new_path, new_evidence))
-                    
-        return None
+        return path_nodes, list(set(evidence_sources))
