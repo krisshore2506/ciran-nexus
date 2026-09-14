@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from api.state import state
 from models.domain import ChatMessage
-from services.copilot_retrieval import CopilotRetrievalService
+from services.ciran_graph import CIRANGraphService
 from config.db import get_db
 from config.neo4j import get_neo4j
 from sqlalchemy.orm import Session
@@ -28,18 +28,8 @@ def ask_copilot(
         if not req.query:
             raise HTTPException(status_code=400, detail="Query cannot be empty")
             
-        retrieval_service = CopilotRetrievalService(db, neo4j_session)
-        # Parse query intent
-        structured_query = state.query_parser.parse_query(req.query, state.entities, req.conversation_history)
-        extracted_entities = [e for e in state.entities if e.id in structured_query.entities]
-        
-        # Execute Vector + Graph Retrieval
-        retrieval_result = retrieval_service.retrieve(structured_query, extracted_entities)
-        
-        # Pass to LLM Service for final formatting
-        res = state.llm_service.generate_copilot_response_with_result(
-            req.query, structured_query, extracted_entities, retrieval_result
-        )
+        graph_service = CIRANGraphService(db, neo4j_session)
+        res = graph_service.invoke(req.query)
         
         logger.info(
             f"COPILOT_QUERY | Intent: {res.intent} | "
