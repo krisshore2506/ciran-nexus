@@ -1,69 +1,117 @@
 from langgraph.graph import StateGraph, END
 from ai.ciran_state import CIRANGraphState
-from services.vector_search import VectorSearchService
-from services.neo4j_graph_service import Neo4jGraphService
-from services.context_builder import ContextBuilder
-from ai.llm_service import LLMService
-from models.domain import CopilotResponse, StructuredQuery, Entity
 from sqlalchemy.orm import Session
 import json
+
+from services.vector_search import VectorSearchService
+from services.neo4j_graph_service import Neo4jGraphService
+from ai.llm_service import LLMService
+
+from agents.supervisor_agent import SupervisorAgent
+from agents.evidence_agent import EvidenceAgent
+from agents.network_agent import NetworkAgent
+from agents.correlation_agent import CorrelationAgent
+from agents.risk_agent import RiskAgent
+from agents.evidence_validator import EvidenceValidator
+from models.domain import CopilotResponse, StructuredQuery, RetrievalResult
 
 class CIRANGraphService:
     def __init__(self, db: Session, neo4j_session):
         self.db = db
         self.neo4j_session = neo4j_session
+        
+        # Core Services
         self.vector_search = VectorSearchService(db)
         self.neo4j_graph = Neo4jGraphService(neo4j_session)
-        self.context_builder = ContextBuilder(self.neo4j_graph)
         self.llm_service = LLMService()
+        
+        # Agents
+        self.supervisor = SupervisorAgent()
+        self.evidence_agent = EvidenceAgent(self.vector_search)
+        self.network_agent = NetworkAgent(self.neo4j_graph)
+        self.correlation_agent = CorrelationAgent()
+        self.risk_agent = RiskAgent()
+        self.validator = EvidenceValidator()
 
         # Build Graph
         builder = StateGraph(CIRANGraphState)
         
-        # Add Nodes
-        builder.add_node("query_understanding", self._query_understanding)
-        builder.add_node("vector_retrieval", self._vector_retrieval)
-        builder.add_node("graph_retrieval", self._graph_retrieval)
-        builder.add_node("context_fusion", self._context_fusion)
-        builder.add_node("evidence_validation", self._evidence_validation)
-        builder.add_node("generate_answer", self._generate_answer)
-        builder.add_node("safe_no_evidence", self._safe_no_evidence)
+        # Nodes
+        builder.add_node("supervisor", self._supervisor_node)
+        builder.add_node("evidence", self._evidence_node)
+        builder.add_node("network", self._network_node)
+        builder.add_node("correlation", self._correlation_node)
+        builder.add_node("risk", self._risk_node)
+        builder.add_node("aggregator", self._aggregator_node)
+        builder.add_node("validator", self._validator_node)
+        builder.add_node("generator", self._generator_node)
+        builder.add_node("safe_response", self._safe_response_node)
 
         # Edges
-        builder.set_entry_point("query_understanding")
+        builder.set_entry_point("supervisor")
         
+        # Supervisor conditional routing
         builder.add_conditional_edges(
-            "query_understanding",
-            self._route_after_understanding,
+            "supervisor",
+            self._route_from_supervisor,
             {
-                "vector_retrieval": "vector_retrieval",
-                "graph_retrieval": "graph_retrieval"
+                "evidence": "evidence",
+                "network": "network",
+                "aggregator": "aggregator"
             }
         )
         
+        # Evidence conditional routing
         builder.add_conditional_edges(
-            "vector_retrieval",
-            self._route_after_vector,
+            "evidence",
+            self._route_from_evidence,
             {
-                "graph_retrieval": "graph_retrieval",
-                "context_fusion": "context_fusion"
+                "network": "network",
+                "correlation": "correlation",
+                "risk": "risk",
+                "aggregator": "aggregator"
             }
         )
         
-        builder.add_edge("graph_retrieval", "context_fusion")
-        builder.add_edge("context_fusion", "evidence_validation")
-        
+        # Network conditional routing
         builder.add_conditional_edges(
-            "evidence_validation",
-            self._route_after_validation,
+            "network",
+            self._route_from_network,
             {
-                "generate_answer": "generate_answer",
-                "safe_no_evidence": "safe_no_evidence"
+                "correlation": "correlation",
+                "risk": "risk",
+                "aggregator": "aggregator"
             }
         )
         
-        builder.add_edge("generate_answer", END)
-        builder.add_edge("safe_no_evidence", END)
+        # Correlation conditional routing
+        builder.add_conditional_edges(
+            "correlation",
+            self._route_from_correlation,
+            {
+                "risk": "risk",
+                "aggregator": "aggregator"
+            }
+        )
+        
+        # Risk -> Aggregator
+        builder.add_edge("risk", "aggregator")
+        
+        # Aggregator -> Validator
+        builder.add_edge("aggregator", "validator")
+        
+        # Validator -> Generate or Safe
+        builder.add_conditional_edges(
+            "validator",
+            self._route_from_validator,
+            {
+                "generator": "generator",
+                "safe_response": "safe_response"
+            }
+        )
+        
+        builder.add_edge("generator", END)
+        builder.add_edge("safe_response", END)
         
         self.graph = builder.compile()
 
@@ -71,114 +119,67 @@ class CIRANGraphService:
         initial_state = {
             "query": query,
             "query_type": "EVIDENCE",
+            "requested_capabilities": [],
             "entity_ids": [],
-            "vector_evidence": [],
-            "graph_context": [],
+            "evidence_result": {},
+            "network_result": {},
+            "correlation_result": {},
+            "risk_result": {},
             "fused_context": {},
-            "evidence_status": "PENDING",
-            "response": None,
+            "validation_status": "PENDING",
+            "final_response": None,
             "source_references": [],
             "errors": []
         }
         
         final_state = self.graph.invoke(initial_state)
-        return final_state["response"]
+        return final_state["final_response"]
 
-    # --- Node Implementations ---
-    
-    def _query_understanding(self, state: CIRANGraphState) -> CIRANGraphState:
-        query = state["query"].lower()
+    # --- Node Wrappers ---
+    def _supervisor_node(self, state: CIRANGraphState):
+        return self.supervisor.execute(state)
         
-        # Simple deterministic classifier
-        # Do not use state.py or LLM for simple understanding
-        if "connect" in query or "network" in query or "relationship" in query or "path" in query:
-            if "what" in query or "where" in query or "how" in query:
-                state["query_type"] = "MIXED"
-            else:
-                state["query_type"] = "GRAPH"
-        else:
-            state["query_type"] = "EVIDENCE"
-            
-        return state
-
-    def _route_after_understanding(self, state: CIRANGraphState) -> str:
-        if state["query_type"] in ["MIXED", "EVIDENCE"]:
-            return "vector_retrieval"
-        return "graph_retrieval"
-
-    def _vector_retrieval(self, state: CIRANGraphState) -> CIRANGraphState:
-        try:
-            results = self.vector_search.search(state["query"], top_k=5)
-            state["vector_evidence"] = results
-            state["source_references"].extend([r["record_id"] for r in results])
-        except Exception as e:
-            state["errors"].append(f"Vector retrieval failed: {str(e)}")
-        return state
-
-    def _route_after_vector(self, state: CIRANGraphState) -> str:
-        if state["query_type"] == "MIXED":
-            return "graph_retrieval"
-        return "context_fusion"
-
-    def _graph_retrieval(self, state: CIRANGraphState) -> CIRANGraphState:
-        try:
-            # If we already have vector evidence, context_builder does this securely.
-            # But graph_retrieval might also query direct neo4j multi-hop if it's a GRAPH query.
-            # For simplicity, if we have record_ids, we will let context_fusion handle the provenance.
-            # If it's a pure GRAPH query, we might just query Neo4j.
-            # For now, we will rely on context_builder for evidence-grounded graph.
-            pass
-        except Exception as e:
-            state["errors"].append(f"Graph retrieval failed: {str(e)}")
-        return state
-
-    def _context_fusion(self, state: CIRANGraphState) -> CIRANGraphState:
-        if state["vector_evidence"]:
-            context = self.context_builder.build_context(state["vector_evidence"])
-            state["fused_context"] = context
-        else:
-            state["fused_context"] = {"document_evidence": [], "graph_evidence": []}
-        return state
-
-    def _evidence_validation(self, state: CIRANGraphState) -> CIRANGraphState:
-        fused = state["fused_context"]
-        docs = fused.get("document_evidence", [])
-        graphs = fused.get("graph_evidence", [])
+    def _evidence_node(self, state: CIRANGraphState):
+        return self.evidence_agent.execute(state)
         
-        if not docs and not graphs:
-            state["evidence_status"] = "NO_EVIDENCE"
-        elif len(docs) < 2 and not graphs:
-            state["evidence_status"] = "PARTIAL_EVIDENCE"
-        else:
-            state["evidence_status"] = "SUFFICIENT_EVIDENCE"
-            
+    def _network_node(self, state: CIRANGraphState):
+        return self.network_agent.execute(state)
+        
+    def _correlation_node(self, state: CIRANGraphState):
+        return self.correlation_agent.execute(state)
+        
+    def _risk_node(self, state: CIRANGraphState):
+        return self.risk_agent.execute(state)
+        
+    def _aggregator_node(self, state: CIRANGraphState):
+        # Flatten all agent results into fused_context
+        state["fused_context"] = {
+            "evidence": state.get("evidence_result", {}),
+            "network": state.get("network_result", {}),
+            "correlation": state.get("correlation_result", {}),
+            "risk": state.get("risk_result", {})
+        }
         return state
+        
+    def _validator_node(self, state: CIRANGraphState):
+        return self.validator.execute(state)
 
-    def _route_after_validation(self, state: CIRANGraphState) -> str:
-        if state["evidence_status"] == "NO_EVIDENCE":
-            return "safe_no_evidence"
-        return "generate_answer"
-
-    def _generate_answer(self, state: CIRANGraphState) -> CIRANGraphState:
+    def _generator_node(self, state: CIRANGraphState):
         try:
-            # Create a mock StructuredQuery and RetrievalResult just to reuse LLMService
-            from models.domain import RetrievalResult
-            
-            sq = StructuredQuery(intent="EVIDENCE", confidence=0.9, entities=[], ambiguous=False, time_range=None)
+            sq = StructuredQuery(intent=state.get("query_type", "EVIDENCE"), confidence=0.9, entities=[], ambiguous=False, time_range=None)
             rr = RetrievalResult()
             
             fused = state["fused_context"]
-            rr.evidence = list(set([d["record_id"] for d in fused.get("document_evidence", [])]))
-            rr.retrieval_notes.append(f"DOCUMENT_EVIDENCE: {json.dumps(fused.get('document_evidence', []))}")
-            rr.retrieval_notes.append(f"GRAPH_EVIDENCE: {json.dumps(fused.get('graph_evidence', []))}")
+            rr.evidence = state.get("source_references", [])
+            rr.retrieval_notes.append(f"MULTI_AGENT_CONTEXT: {json.dumps(fused)}")
             
             res = self.llm_service.generate_copilot_response_with_result(
                 state["query"], sq, [], rr
             )
-            state["response"] = res
+            state["final_response"] = res
         except Exception as e:
             state["errors"].append(str(e))
-            state["response"] = CopilotResponse(
+            state["final_response"] = CopilotResponse(
                 summary="An error occurred while generating the response.",
                 chips=["Error"],
                 confidence=0,
@@ -187,12 +188,42 @@ class CIRANGraphService:
             )
         return state
 
-    def _safe_no_evidence(self, state: CIRANGraphState) -> CIRANGraphState:
-        state["response"] = CopilotResponse(
-            summary="Insufficient evidence was found in the available CIRAN records to answer this query.",
+    def _safe_response_node(self, state: CIRANGraphState):
+        state["final_response"] = CopilotResponse(
+            summary="Insufficient evidence was found in the available CIRAN records to fully answer this query.",
             chips=["No Evidence"],
             confidence=100,
             caution="Generated by AI. Verify all source records.",
             intent="UNKNOWN"
         )
         return state
+
+    # --- Routers ---
+    def _route_from_supervisor(self, state: CIRANGraphState) -> str:
+        req = set(state.get("requested_capabilities", []))
+        if "EVIDENCE" in req: return "evidence"
+        if "NETWORK" in req: return "network"
+        return "aggregator"
+
+    def _route_from_evidence(self, state: CIRANGraphState) -> str:
+        req = set(state.get("requested_capabilities", []))
+        if "NETWORK" in req: return "network"
+        if "CORRELATION" in req: return "correlation"
+        if "RISK" in req: return "risk"
+        return "aggregator"
+
+    def _route_from_network(self, state: CIRANGraphState) -> str:
+        req = set(state.get("requested_capabilities", []))
+        if "CORRELATION" in req: return "correlation"
+        if "RISK" in req: return "risk"
+        return "aggregator"
+
+    def _route_from_correlation(self, state: CIRANGraphState) -> str:
+        req = set(state.get("requested_capabilities", []))
+        if "RISK" in req: return "risk"
+        return "aggregator"
+
+    def _route_from_validator(self, state: CIRANGraphState) -> str:
+        if state.get("validation_status") == "INSUFFICIENT":
+            return "safe_response"
+        return "generator"
