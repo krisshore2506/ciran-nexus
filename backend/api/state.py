@@ -11,6 +11,7 @@ from services.graph_intelligence import GraphIntelligenceService
 from services.temporal_analysis import TemporalAnalysisService
 from services.query_parser import QueryParser
 
+
 class AppState:
     def __init__(self):
         self.entities: List[Entity] = []
@@ -20,16 +21,30 @@ class AppState:
         self.evidence: List[EvidenceItem] = []
         self.timeline: List[TimelineEvent] = []
         self.patterns: List[PatternInsight] = []
-        
+
         self.entity_service = EntityExtractionService()
         self.relationship_engine = RelationshipEngine()
-        self.entity_resolution_service = EntityResolutionService(self.relationship_engine)
-        self.graph_intelligence = GraphIntelligenceService(self.relationship_engine)
-        self.temporal_analysis = TemporalAnalysisService(self.relationship_engine)
-        self.correlation_engine = CorrelationEngine(self.relationship_engine, self.graph_intelligence)
+        self.entity_resolution_service = EntityResolutionService(
+            self.relationship_engine
+        )
+        self.graph_intelligence = GraphIntelligenceService(
+            self.relationship_engine
+        )
+        self.temporal_analysis = TemporalAnalysisService(
+            self.relationship_engine
+        )
+        self.correlation_engine = CorrelationEngine(
+            self.relationship_engine,
+            self.graph_intelligence
+        )
         self.risk_engine = RiskEngine(self.relationship_engine)
         self.evidence_engine = EvidenceEngine()
+
+        # LLMService is initialized by the DB-backed CIRAN graph flow.
+        # Keeping it here causes CopilotRetrievalService to start without
+        # required PostgreSQL and Neo4j sessions.
         self.query_parser = QueryParser()
         self.report_generator = ReportGenerator()
+
 
 state = AppState()

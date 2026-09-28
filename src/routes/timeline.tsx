@@ -16,7 +16,7 @@ export const Route = createFileRoute("/timeline")({
 function GlobalTimelinePage() {
   const query = useQuery({
     queryKey: ["global-timeline"],
-    queryFn: getTimeline,
+    queryFn: () => getTimeline(),
   });
 
   const events = query.data;

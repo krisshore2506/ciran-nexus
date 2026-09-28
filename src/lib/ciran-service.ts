@@ -10,6 +10,7 @@ import {
   type EntityType,
   type Relation,
   type RelationType,
+  type TimelineEvent,
 } from "./ciran-data";
 
 export type { Entity, EntityType, Relation, RelationType };
@@ -137,7 +138,7 @@ export async function getNeighbours(id: string): Promise<{ relation: Relation; o
     .filter((x): x is { relation: Relation; other: Entity } => x !== null);
 }
 
-export async function getTimeline(id?: string) {
+export async function getTimeline(id?: string): Promise<TimelineEvent[]> {
   if (USE_MOCK) {
     if (id) {
       return mockTimeline.filter((t) => t.entities.includes(id));
@@ -145,9 +146,9 @@ export async function getTimeline(id?: string) {
     return mockTimeline;
   }
   if (id) {
-    return fetchApi<unknown[]>(`/api/entities/${encodeURIComponent(id)}/timeline`);
+    return fetchApi<TimelineEvent[]>(`/api/entities/${encodeURIComponent(id)}/timeline`);
   }
-  return fetchApi<unknown[]>("/api/timeline"); // fallback if needed
+  return fetchApi<TimelineEvent[]>("/api/timeline"); // fallback if needed
 }
 
 export async function getCrossCaseLinks() {
